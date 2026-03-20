@@ -1,0 +1,332 @@
+﻿  main.cpp
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(564,9): warning C4005: "glActiveTexture": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3048,9):
+      zobacz poprzednią definicję „glActiveTexture”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(565,9): warning C4005: "glAttachShader": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3411,9):
+      zobacz poprzednią definicję „glAttachShader”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(566,9): warning C4005: "glBindBuffer": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3359,9):
+      zobacz poprzednią definicję „glBindBuffer”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(567,9): warning C4005: "glBindSampler": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(4073,9):
+      zobacz poprzednią definicję „glBindSampler”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(568,9): warning C4005: "glBindTexture": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(2968,9):
+      zobacz poprzednią definicję „glBindTexture”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(569,9): warning C4005: "glBindVertexArray": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3941,9):
+      zobacz poprzednią definicję „glBindVertexArray”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(570,9): warning C4005: "glBlendEquation": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3328,9):
+      zobacz poprzednią definicję „glBlendEquation”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(571,9): warning C4005: "glBlendEquationSeparate": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3396,9):
+      zobacz poprzednią definicję „glBlendEquationSeparate”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(572,9): warning C4005: "glBlendFuncSeparate": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3190,9):
+      zobacz poprzednią definicję „glBlendFuncSeparate”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(573,9): warning C4005: "glBufferData": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3371,9):
+      zobacz poprzednią definicję „glBufferData”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(574,9): warning C4005: "glBufferSubData": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3374,9):
+      zobacz poprzednią definicję „glBufferSubData”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(575,9): warning C4005: "glClear": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(2058,9):
+      zobacz poprzednią definicję „glClear”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(576,9): warning C4005: "glClearColor": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(2061,9):
+      zobacz poprzednią definicję „glClearColor”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(577,9): warning C4005: "glCompileShader": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3417,9):
+      zobacz poprzednią definicję „glCompileShader”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(578,9): warning C4005: "glCreateProgram": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3420,9):
+      zobacz poprzednią definicję „glCreateProgram”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(579,9): warning C4005: "glCreateShader": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3423,9):
+      zobacz poprzednią definicję „glCreateShader”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(580,9): warning C4005: "glDeleteBuffers": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3362,9):
+      zobacz poprzednią definicję „glDeleteBuffers”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(581,9): warning C4005: "glDeleteProgram": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3426,9):
+      zobacz poprzednią definicję „glDeleteProgram”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(582,9): warning C4005: "glDeleteSamplers": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(4067,9):
+      zobacz poprzednią definicję „glDeleteSamplers”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(583,9): warning C4005: "glDeleteShader": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3429,9):
+      zobacz poprzednią definicję „glDeleteShader”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(584,9): warning C4005: "glDeleteTextures": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(2971,9):
+      zobacz poprzednią definicję „glDeleteTextures”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(585,9): warning C4005: "glDeleteVertexArrays": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3944,9):
+      zobacz poprzednią definicję „glDeleteVertexArrays”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(586,9): warning C4005: "glDetachShader": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3432,9):
+      zobacz poprzednią definicję „glDetachShader”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(587,9): warning C4005: "glDisable": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(2079,9):
+      zobacz poprzednią definicję „glDisable”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(588,9): warning C4005: "glDisableVertexAttribArray": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3435,9):
+      zobacz poprzednią definicję „glDisableVertexAttribArray”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(589,9): warning C4005: "glDrawElements": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(2941,9):
+      zobacz poprzednią definicję „glDrawElements”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(590,9): warning C4005: "glDrawElementsBaseVertex": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3997,9):
+      zobacz poprzednią definicję „glDrawElementsBaseVertex”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(591,9): warning C4005: "glEnable": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(2082,9):
+      zobacz poprzednią definicję „glEnable”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(592,9): warning C4005: "glEnableVertexAttribArray": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3438,9):
+      zobacz poprzednią definicję „glEnableVertexAttribArray”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(593,9): warning C4005: "glFlush": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(2088,9):
+      zobacz poprzednią definicję „glFlush”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(594,9): warning C4005: "glGenBuffers": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3365,9):
+      zobacz poprzednią definicję „glGenBuffers”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(595,9): warning C4005: "glGenSamplers": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(4064,9):
+      zobacz poprzednią definicję „glGenSamplers”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(596,9): warning C4005: "glGenTextures": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(2974,9):
+      zobacz poprzednią definicję „glGenTextures”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(597,9): warning C4005: "glGenVertexArrays": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3947,9):
+      zobacz poprzednią definicję „glGenVertexArrays”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(598,9): warning C4005: "glGetAttribLocation": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3450,9):
+      zobacz poprzednią definicję „glGetAttribLocation”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(599,9): warning C4005: "glGetError": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(2124,9):
+      zobacz poprzednią definicję „glGetError”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(600,9): warning C4005: "glGetIntegerv": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(2130,9):
+      zobacz poprzednią definicję „glGetIntegerv”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(601,9): warning C4005: "glGetProgramInfoLog": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3456,9):
+      zobacz poprzednią definicję „glGetProgramInfoLog”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(602,9): warning C4005: "glGetProgramiv": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3453,9):
+      zobacz poprzednią definicję „glGetProgramiv”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(603,9): warning C4005: "glGetShaderInfoLog": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3462,9):
+      zobacz poprzednią definicję „glGetShaderInfoLog”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(604,9): warning C4005: "glGetShaderiv": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3459,9):
+      zobacz poprzednią definicję „glGetShaderiv”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(605,9): warning C4005: "glGetString": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(2133,9):
+      zobacz poprzednią definicję „glGetString”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(606,9): warning C4005: "glGetStringi": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3872,9):
+      zobacz poprzednią definicję „glGetStringi”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(607,9): warning C4005: "glGetUniformLocation": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3468,9):
+      zobacz poprzednią definicję „glGetUniformLocation”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(608,9): warning C4005: "glGetVertexAttribPointerv": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3486,9):
+      zobacz poprzednią definicję „glGetVertexAttribPointerv”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(609,9): warning C4005: "glGetVertexAttribiv": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3483,9):
+      zobacz poprzednią definicję „glGetVertexAttribiv”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(610,9): warning C4005: "glIsEnabled": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(2151,9):
+      zobacz poprzednią definicję „glIsEnabled”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(611,9): warning C4005: "glIsProgram": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3489,9):
+      zobacz poprzednią definicję „glIsProgram”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(612,9): warning C4005: "glLinkProgram": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3495,9):
+      zobacz poprzednią definicję „glLinkProgram”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(613,9): warning C4005: "glPixelStorei": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(2109,9):
+      zobacz poprzednią definicję „glPixelStorei”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(614,9): warning C4005: "glPolygonMode": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(2031,9):
+      zobacz poprzednią definicję „glPolygonMode”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(615,9): warning C4005: "glReadPixels": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(2115,9):
+      zobacz poprzednią definicję „glReadPixels”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(616,9): warning C4005: "glSamplerParameteri": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(4076,9):
+      zobacz poprzednią definicję „glSamplerParameteri”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(617,9): warning C4005: "glScissor": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(2034,9):
+      zobacz poprzednią definicję „glScissor”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(618,9): warning C4005: "glShaderSource": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3498,9):
+      zobacz poprzednią definicję „glShaderSource”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(619,9): warning C4005: "glTexImage2D": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(2052,9):
+      zobacz poprzednią definicję „glTexImage2D”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(620,9): warning C4005: "glTexParameteri": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(2043,9):
+      zobacz poprzednią definicję „glTexParameteri”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(621,9): warning C4005: "glTexSubImage2D": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(2965,9):
+      zobacz poprzednią definicję „glTexSubImage2D”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(622,9): warning C4005: "glUniform1i": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3516,9):
+      zobacz poprzednią definicję „glUniform1i”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(623,9): warning C4005: "glUniformMatrix4fv": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3558,9):
+      zobacz poprzednią definicję „glUniformMatrix4fv”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(624,9): warning C4005: "glUseProgram": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3501,9):
+      zobacz poprzednią definicję „glUseProgram”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(625,9): warning C4005: "glVertexAttribPointer": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(3672,9):
+      zobacz poprzednią definicję „glVertexAttribPointer”
+  
+D:\STUDIA\INZYNIERKA\Project1\libraries\imgui-master\imgui_impl_opengl3_loader.h(626,9): warning C4005: "glViewport": ponowna definicja makra
+  (kompilowanie pliku źródłowego „main.cpp”)
+      D:\STUDIA\INZYNIERKA\Project1\libraries\glad\glad.h(2157,9):
+      zobacz poprzednią definicję „glViewport”
+  
+D:\STUDIA\INZYNIERKA\Project1\main.cpp(526,33): warning C4244: "inicjowanie": konwersja z "double" do "float", możliwa utrata danych
+D:\STUDIA\INZYNIERKA\Project1\main.cpp(526,21): warning C4244: "inicjowanie": konwersja z "double" do "const float", możliwa utrata danych
+D:\STUDIA\INZYNIERKA\Project1\main.cpp(641,21): warning C4305: "inicjowanie": obcięcie z "double" do "float"
+D:\STUDIA\INZYNIERKA\Project1\main.cpp(1255,28): warning C4244: "inicjowanie": konwersja z "double" do "float", możliwa utrata danych
+D:\STUDIA\INZYNIERKA\Project1\main.cpp(1366,17): warning C4244: "=": konwersja z "double" do "float", możliwa utrata danych
+D:\STUDIA\INZYNIERKA\Project1\main.cpp(1367,17): warning C4244: "=": konwersja z "double" do "float", możliwa utrata danych
+D:\STUDIA\INZYNIERKA\Project1\main.cpp(1371,19): warning C4244: "inicjowanie": konwersja z "double" do "float", możliwa utrata danych
+D:\STUDIA\INZYNIERKA\Project1\main.cpp(1372,19): warning C4244: "inicjowanie": konwersja z "double" do "float", możliwa utrata danych
+D:\STUDIA\INZYNIERKA\Project1\main.cpp(1373,13): warning C4244: "=": konwersja z "double" do "float", możliwa utrata danych
+D:\STUDIA\INZYNIERKA\Project1\main.cpp(1374,13): warning C4244: "=": konwersja z "double" do "float", możliwa utrata danych
+D:\STUDIA\INZYNIERKA\Project1\main.cpp(1790,48): warning C4244: "inicjowanie": konwersja z "double" do "float", możliwa utrata danych
+D:\STUDIA\INZYNIERKA\Project1\main.cpp(1790,28): warning C4244: "inicjowanie": konwersja z "double" do "const float", możliwa utrata danych
+D:\STUDIA\INZYNIERKA\Project1\main.cpp(1883,31): warning C4267: "inicjowanie": konwersja z "size_t" do "int", możliwa utrata danych
+D:\STUDIA\INZYNIERKA\Project1\main.cpp(1883,29): warning C4267: "inicjowanie": konwersja z "size_t" do "const int", możliwa utrata danych
+LINK : warning LNK4098: domyślna biblioteka "MSVCRT" powoduje konflikt z innymi bibliotekami; użyj opcji /NODEFAULTLIB:biblioteka
+  Project1.vcxproj -> D:\STUDIA\INZYNIERKA\x64\Debug\Project1.exe
