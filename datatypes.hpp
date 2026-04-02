@@ -46,6 +46,8 @@ struct source
     glm::vec3 velocity = glm::vec3(0.0f, 0, 0);
     glm::vec3 rewind_point = glm::vec3(src_x, src_y, src_z);
     glm::vec3 rewind_vel = velocity;
+    std::vector<node> verts;
+    float radius = 0.02f;
 };
 
 struct Cuboid_dimensions

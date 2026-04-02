@@ -17,6 +17,8 @@ static std::vector<std::vector<std::pair<float, float>>> wektorCurr; // bufory z
 static std::vector<EchoHit> gPrevHits, gCurrHits;
 static std::vector<char> gPrevTaken;
 
+std::vector<Wave> waves;
+
 static int pick_prev_hit(const EchoHit &cur,
                          const std::vector<EchoHit> &prev,
                          std::vector<char> &prevTaken,
@@ -150,7 +152,6 @@ static size_t gWinIdx = 0; // kt�ry 5 ms segment aktualnie nadajemy
 
 // WAZNE DANE
 float radius = 0.02f;
-float src_radius = 0.02f;
 float time_passed = 0.0f;
 float window_ms = 1.0f;
 // dane z csv
@@ -158,8 +159,7 @@ std::vector<double> tSec; // czas w sekundach (po przeskalowaniu)
 std::vector<float> y;     // warto�ci pr�bek (2. kolumna)
 
 // do podzialu sfery na klatki
-static size_t gRefineCursor = 0;                        // gdzie sko�czyli�my ostatnio
-static std::unordered_map<uint64_t, int> gEdgeMidCache; // edge -> midpoint
+static size_t gRefineCursor = 0;
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -230,7 +230,7 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
-void renderScene();
+void RenderWave();
 // void drawCuboid(float width, float height, float depth);
 void drawCuboidTransparentSorted(struct Cuboid_dimensions temp_Cube);
 int printOversizedTriangles(float maxArea);
@@ -630,36 +630,36 @@ static int midpoint_index(int i0, int i1,
 
 
 
-float calculateTriangleArea(int a, int b, int c)
+float calculateTriangleArea(Wave& wave, const std::vector<node>& nodes, int a, int b, int c)
 {
-    glm::vec3 ab = nodes[b].position - nodes[a].position;
-    glm::vec3 ac = nodes[c].position - nodes[a].position;
+    glm::vec3 ab = wave.nodes[b].position - wave.nodes[a].position;
+    glm::vec3 ac = wave.nodes[c].position - wave.nodes[a].position;
     glm::vec3 cross = glm::cross(ab, ac);
     return 0.5f * glm::length(cross); // funkcja do obliczania pola
 }
 
-int addMidpoint(int a, int b)
+int addMidpoint(Wave& wave, int a, int b)
 {
     node midpoint;
-    midpoint.position = (nodes[a].position + nodes[b].position) * 0.5f;
+    midpoint.position = (wave.nodes[a].position + wave.nodes[b].position) * 0.5f;
 
-    midpoint.energy = (nodes[a].energy + nodes[b].energy) * 0.5f;
-    midpoint.tEmit = (nodes[a].tEmit + nodes[b].tEmit) * 0.5f;
-    // midpoint.srcVel = (nodes[a].srcVel + nodes[b].srcVel) * 0.5f;
-    midpoint.velocity = (nodes[a].velocity + nodes[b].velocity) * 0.5f;
+    midpoint.energy = (wave.nodes[a].energy + wave.nodes[b].energy) * 0.5f;
+    midpoint.tEmit = (wave.nodes[a].tEmit + wave.nodes[b].tEmit) * 0.5f;
+    // midpoint.srcVel = (wave.nodes[a].srcVel + wave.nodes[b].srcVel) * 0.5f;
+    midpoint.velocity = (wave.nodes[a].velocity + wave.nodes[b].velocity) * 0.5f;
     midpoint.velocity = glm::normalize(midpoint.velocity) * SOUND_V;
 
-    // midpoint.srcVel = glm::normalize(midpoint.srcVel) * glm::length(nodes[a].srcVel);
-    midpoint.bounces = nodes[a].bounces;
-    midpoint.suppressUntilT = (nodes[a].suppressUntilT + nodes[b].suppressUntilT) * 0.5f;
-    // midpoint.path = (nodes[a].path + nodes[b].path) * 0.5f;
-    // midpoint.velocity = (nodes[a].velocity + nodes[b].velocity) * 0.5f;
-    // midpoint.nEmit = (nodes[a].nEmit + nodes[b].nEmit) * 0.5f;
-    // midpoint.nEmit = glm::normalize(midpoint.nEmit) * glm::length(nodes[a].nEmit);
+    // midpoint.srcVel = glm::normalize(midpoint.srcVel) * glm::length(wave.nodes[a].srcVel);
+    midpoint.bounces = wave.nodes[a].bounces;
+    midpoint.suppressUntilT = (wave.nodes[a].suppressUntilT + wave.nodes[b].suppressUntilT) * 0.5f;
+    // midpoint.path = (wave.nodes[a].path + wave.nodes[b].path) * 0.5f;
+    // midpoint.velocity = (wave.nodes[a].velocity + wave.nodes[b].velocity) * 0.5f;
+    // midpoint.nEmit = (wave.nodes[a].nEmit + wave.nodes[b].nEmit) * 0.5f;
+    // midpoint.nEmit = glm::normalize(midpoint.nEmit) * glm::length(wave.nodes[a].nEmit);
 
-    midpoint.doppler = (nodes[a].doppler + nodes[b].doppler) * 0.5f;
-    nodes.push_back(midpoint);
-    return (int)(nodes.size() - 1);
+    midpoint.doppler = (wave.nodes[a].doppler + wave.nodes[b].doppler) * 0.5f;
+    wave.nodes.push_back(midpoint);
+    return (int)(wave.nodes.size() - 1);
 }
 
 // POMOCNICZE
@@ -682,19 +682,19 @@ static inline bool edge_eq(const Edge &x, const Edge &y)
     return x.a == y.a && x.b == y.b;
 }
 
-static int midpoint_index_nodes_cached(int i0, int i1)
+static int midpoint_index_nodes_cached(Wave& wave, int i0, int i1)
 {
     uint64_t key = edge_key(i0, i1);
-    auto it = gEdgeMidCache.find(key);
-    if (it != gEdgeMidCache.end())
+    auto it = wave.gEdgeMidCache.find(key);
+    if (it != wave.gEdgeMidCache.end())
         return it->second;
-    int idx = addMidpoint(i0, i1); // midpoint(pozycja, predkosc)
-    gEdgeMidCache.emplace(key, idx);
+    int idx = addMidpoint(wave, i0, i1); // midpoint(pozycja, predkosc)
+    wave.gEdgeMidCache.emplace(key, idx);
     return idx;
 }
 
 // Zwraca indeks midpointu; je�li nie istnieje tworzy addMidpoint
-static int midpoint_index_nodes(int i0, int i1,
+static int midpoint_index_nodes(Wave& wave, int i0, int i1,
                                 std::unordered_map<uint64_t, int> &cache)
 {
     uint64_t key = edge_key(i0, i1);
@@ -702,12 +702,12 @@ static int midpoint_index_nodes(int i0, int i1,
     if (it != cache.end())
         return it->second;
 
-    int idx = addMidpoint(i0, i1); // �rednia pozycji i pr�dko�ci
+    int idx = addMidpoint(wave, i0, i1); // �rednia pozycji i pr�dko�ci
     cache.emplace(key, idx);
     return idx;
 }
 // WIELOWATKOWOSC
-bool refineIcosahedron_chunked_mt(float maxArea,
+bool refineIcosahedron_chunked_mt(Wave& wave, float maxArea,
                                   size_t triBudget, // ile tr�jk�t�w obrabiamy w tej klatce
                                   int threadCount = std::thread::hardware_concurrency())
 {
@@ -720,7 +720,7 @@ bool refineIcosahedron_chunked_mt(float maxArea,
     if (gRefineCursor > triangles.size())
     {
         gRefineCursor = 0;
-        gEdgeMidCache.clear();
+        wave.gEdgeMidCache.clear();
     }
 
     // pr�g bez sqrt: |cross|^2 > (2*maxArea)^2 zamiast porownywac pola porownyujemy kwadraty
@@ -761,9 +761,9 @@ bool refineIcosahedron_chunked_mt(float maxArea,
             Triangle t = triangles[i]; // kopiuj
             int a = t.indices[0], b = t.indices[1], c = t.indices[2];
 
-            const glm::vec3 &pa = nodes[a].position;
-            const glm::vec3 &pb = nodes[b].position;
-            const glm::vec3 &pc = nodes[c].position;
+            const glm::vec3 &pa = wave.nodes[a].position;
+            const glm::vec3 &pb = wave.nodes[b].position;
+            const glm::vec3 &pc = wave.nodes[c].position;
 
             const bool nearWall =
                 (std::fabs(pa.x) > cuboidHalfWidth - safetyMargin) ||
@@ -834,10 +834,10 @@ bool refineIcosahedron_chunked_mt(float maxArea,
 
     // utw�rz midpointy -
     std::vector<int> edgeMidIdx(edges.size());
-    nodes.reserve(nodes.size() + edges.size()); // minimalizacja realokacji
+    wave.nodes.reserve(wave.nodes.size() + edges.size()); // minimalizacja realokacji
     for (size_t i = 0; i < edges.size(); ++i)
     {
-        edgeMidIdx[i] = midpoint_index_nodes_cached(edges[i].a, edges[i].b);
+        edgeMidIdx[i] = midpoint_index_nodes_cached(wave, edges[i].a, edges[i].b);
     }
 
     auto edge_lookup = [&](int u, int v) -> int
@@ -845,7 +845,7 @@ bool refineIcosahedron_chunked_mt(float maxArea,
         if (u > v)
             std::swap(u, v);
         const uint64_t key = edge_key(u, v);
-        auto it = gEdgeMidCache.find(key);
+        auto it = wave.gEdgeMidCache.find(key);
         return it->second;
     };
 
@@ -916,7 +916,7 @@ bool refineIcosahedron_chunked_mt(float maxArea,
     return true;
 }
 
-bool refineIcosahedron_chunked(float maxArea,
+bool refineIcosahedron_chunked(Wave& wave, float maxArea,
                                size_t triBudget /* ile tr�jk�t�w obrabiamy na wywo�anie */)
 {
     if (triangles.empty() || triBudget == 0)
@@ -926,7 +926,7 @@ bool refineIcosahedron_chunked(float maxArea,
     if (gRefineCursor > triangles.size())
     {
         gRefineCursor = 0;
-        gEdgeMidCache.clear();
+        wave.gEdgeMidCache.clear();
     }
 
     // Sta�e i pr�g bez sqrt: |cross|^2 > (2*maxArea)^2
@@ -948,9 +948,9 @@ bool refineIcosahedron_chunked(float maxArea,
         // Triangle t = triangles[i];
         int a = triangles[i].indices[0], b = triangles[i].indices[1], c = triangles[i].indices[2];
 
-        const glm::vec3 &pa = nodes[a].position;
-        const glm::vec3 &pb = nodes[b].position;
-        const glm::vec3 &pc = nodes[c].position;
+        const glm::vec3 &pa = wave.nodes[a].position;
+        const glm::vec3 &pb = wave.nodes[b].position;
+        const glm::vec3 &pc = wave.nodes[c].position;
 
         // sprawdz, czy blisko sciany. jak tak - nie dziel
         const bool nearWall =
@@ -975,9 +975,9 @@ bool refineIcosahedron_chunked(float maxArea,
             if (cr2 > area2_threshold)
             {
                 // Zast�p tr�jk�t i do�� 3 nowe
-                const int ab_i = midpoint_index_nodes_cached(a, b);
-                const int bc_i = midpoint_index_nodes_cached(b, c);
-                const int ca_i = midpoint_index_nodes_cached(c, a);
+                const int ab_i = midpoint_index_nodes_cached(wave, a, b);
+                const int bc_i = midpoint_index_nodes_cached(wave, b, c);
+                const int ca_i = midpoint_index_nodes_cached(wave, c, a);
 
                 triangles[i] = {{a, ab_i, ca_i}};       // zamiana bie��cego
                 triangles.push_back({{b, bc_i, ab_i}}); // 3 nowe
@@ -1114,7 +1114,8 @@ int main()
         // calculateFPS();
         // if (true)
         //{
-        renderScene();
+        for (auto& wave : waves)
+            RenderWave(wave);
         //}
 
         glfwPollEvents();
@@ -1233,7 +1234,7 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-void renderScene()
+void RenderWave(Wave& wave)
 {
     // glEnable(GL_BLEND);
     // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1257,7 +1258,7 @@ void renderScene()
 
         rewind_punkt = true;
 
-        nodes.clear();
+        wave.nodes.clear();
         triangles.clear();
 
         if (serio_first)
@@ -1266,17 +1267,17 @@ void renderScene()
             // Zbuduj geometri� dla mikrofonu i �r�d�a
             const int SUBDIV_RIGID = 2;
 
-            mic_nodes.clear();
+            Mic.verts.clear();
             microphone.clear();
-            buildIcosphereNodesTris(mic_radius, SUBDIV_RIGID, mic_nodes, microphone);
+            buildIcosphereNodesTris(Mic.radius, SUBDIV_RIGID, Mic.verts, microphone);
 
-            src_nodes.clear();
+            Source.verts.clear();
             source_tri.clear();
-            buildIcosphereNodesTris(src_radius, SUBDIV_RIGID, src_nodes, source_tri);
+            buildIcosphereNodesTris(Source.radius, SUBDIV_RIGID, Source.verts, source_tri);
 
             // Bufory GPU :
-            buildBuffersFor(mic_nodes, microphone, gMicGL, /*dynamic=*/false);
-            buildBuffersFor(src_nodes, source_tri, gSrcGL, /*dynamic=*/false);
+            buildBuffersFor(Mic.verts, microphone, gMicGL, /*dynamic=*/false);
+            buildBuffersFor(Source.verts, source_tri, gSrcGL, /*dynamic=*/false);
         }
         // gestosc - ka�dy poziom �4 liczba tr�jk�t�w
         constexpr int SUBDIV = 2; // 2 optymalnie, wiecej laguje
@@ -1336,7 +1337,7 @@ void renderScene()
             faces.swap(new_faces);
         }
 
-        nodes.reserve(verts.size());
+        wave.nodes.reserve(verts.size());
         glm::vec3 buf2 = glm::vec3(Source.src_x, Source.src_y, Source.src_z);
         glm::vec3 gSourceVel = Source.velocity;
         // const float audioE = getAtTime((gWinIdx)*window_ms / 1000.0f);
@@ -1361,7 +1362,7 @@ void renderScene()
             // nd.winId = (int)gWinIdx;
             nd.seedId = i++;
 
-            nodes.push_back(nd);
+            wave.nodes.push_back(nd);
         }
 
         triangles.reserve(faces.size());
@@ -1371,7 +1372,7 @@ void renderScene()
             // break;
         }
         // buildSphereBuffers(/*dynamic=*/true);
-        buildBuffersFor(nodes, triangles, gWaveGL, /*dynamic=*/true);
+        buildBuffersFor(wave.nodes, triangles, gWaveGL, /*dynamic=*/true);
 
         // po zbudowaniu dwudziestoscianu
         gAvgEdgeLen = computeAvgEdgeLen(verts, faces);
@@ -1388,7 +1389,7 @@ void renderScene()
         budget = triangles.size(); // TO DO: MOZNA ZMIENIC NA WIEKSZE (W SENSIE ZMIENIC np. 4 -> 2)
         int threads = std::max(1u, std::thread::hardware_concurrency());
 
-        if (refineIcosahedron_chunked_mt(0.05f, budget, threads))
+        if (refineIcosahedron_chunked_mt(wave, 0.05f, budget, threads))
         {
             gMeshDirty = true; // przebuduj bufory tylko gdy zasz�a zmiana
         }
@@ -1399,23 +1400,23 @@ void renderScene()
         // updatePhysics(dt, Cube, Obstacle);
         // usuwanie zuzytych nodes
         pruneSlowNodes(/*minEnergy=*/getAtTime((gWinIdx)*window_ms / 1000.0f));
-        updatePhysics(dt, Cube, Obstacle);
+        updatePhysics(dt, window_ms, time_passed, wave, Source, Mic, Cube, Obstacle);
     }
 
     // odbuduj bufory tylko gdy trzeba
     if (gMeshDirty)
     {
         // buildSphereBuffers(/*dynamic=*/true);
-        buildBuffersFor(nodes, triangles, gWaveGL, /*dynamic=*/true);
+        buildBuffersFor(wave.nodes, triangles, gWaveGL, /*dynamic=*/true);
         gMeshDirty = false;
     }
     else
     {
         // w przeciwnym razie tylko podmie� pozycje
         // updateSpherePositions();
-        updatePositionsFor(nodes, gWaveGL);
-        updatePositionsFor(mic_nodes, gMicGL);
-        updatePositionsFor(src_nodes, gSrcGL);
+        updatePositionsFor(wave.nodes, gWaveGL);
+        updatePositionsFor(Mic.verts, gMicGL);
+        updatePositionsFor(Source.verts, gSrcGL);
     }
 
     // 3) rysuj TYLKO z VBO/IBO
@@ -1448,7 +1449,7 @@ void renderScene()
     drawCuboidTransparentSorted(Cube);
 } // do wyswietlania symulacji
 
-int printOversizedTriangles(float maxArea)
+int printOversizedTriangles(Wave& wave, float maxArea)
 {
     // te same sta�e co w refine
     const float cuboidHalfWidth = Cube.width * 0.5f;
@@ -1463,9 +1464,9 @@ int printOversizedTriangles(float maxArea)
     for (const auto &t : triangles)
     {
         int a = t.indices[0], b = t.indices[1], c = t.indices[2];
-        const glm::vec3 &pa = nodes[a].position;
-        const glm::vec3 &pb = nodes[b].position;
-        const glm::vec3 &pc = nodes[c].position;
+        const glm::vec3 &pa = wave.nodes[a].position;
+        const glm::vec3 &pb = wave.nodes[b].position;
+        const glm::vec3 &pc = wave.nodes[c].position;
 
         // pomijamy tr�jk�ty blisko �ciany (jak w refine)
         const bool nearWall =
@@ -1567,13 +1568,13 @@ static float dist2PointTriangle(const glm::vec3 &p,
     return std::min(d2ab, std::min(d2bc, d2ca));
 }
 
-static inline bool touchesMicrophone(int nodeIndex)
+static inline bool touchesMicrophone(Wave& wave, int nodeIndex)
 {
     const glm::vec3 center(Mic.mic_x, Mic.mic_y, Mic.mic_z);
-    const float r = mic_radius;
+    const float r = Mic.radius;
     const float r2 = r * r;
 
-    const glm::vec3 &p = nodes[nodeIndex].position;
+    const glm::vec3 &p = wave.nodes[nodeIndex].position;
     glm::vec3 d = p - center;
     float dist2 = glm::dot(d, d);
 
@@ -1593,9 +1594,9 @@ static inline bool touchesMicrophone(int nodeIndex)
             tri.indices[2] != nodeIndex)
             continue;
 
-        const glm::vec3 &a = nodes[tri.indices[0]].position;
-        const glm::vec3 &b = nodes[tri.indices[1]].position;
-        const glm::vec3 &c = nodes[tri.indices[2]].position;
+        const glm::vec3 &a = wave.nodes[tri.indices[0]].position;
+        const glm::vec3 &b = wave.nodes[tri.indices[1]].position;
+        const glm::vec3 &c = wave.nodes[tri.indices[2]].position;
 
         float d2Tri = dist2PointTriangle(center, a, b, c);
         if (d2Tri <= (1440 * dt) * 1440 * dt)
@@ -1612,10 +1613,10 @@ static inline bool touchesMicrophone(int nodeIndex)
     return false;
 } // czy fala dotyka mikrofonu
 
-static inline bool touchesMicrophonePoint(int nodeIndex)
+static inline bool touchesMicrophonePoint(Wave& wave, int nodeIndex)
 {
     const glm::vec3 center(Mic.mic_x, Mic.mic_y, Mic.mic_z);
-    const glm::vec3 &pNode = nodes[nodeIndex].position;
+    const glm::vec3 &pNode = wave.nodes[nodeIndex].position;
 
     float maxExtra = gAvgEdgeLen * 1.5f;
     float farR2 = 1440 * dt * 10;
@@ -1629,7 +1630,7 @@ static inline bool touchesMicrophonePoint(int nodeIndex)
     const float maxAdvance = (soundSpeed * dt) * 1.5;
 
     // kierunek propagacji z pr�dko�ci noda
-    glm::vec3 n_prop = glm::normalize(nodes[nodeIndex].velocity);
+    glm::vec3 n_prop = glm::normalize(wave.nodes[nodeIndex].velocity);
 
     for (const auto &tri : triangles)
     {
@@ -1638,9 +1639,9 @@ static inline bool touchesMicrophonePoint(int nodeIndex)
             tri.indices[2] != nodeIndex)
             continue;
 
-        const glm::vec3 &a = nodes[tri.indices[0]].position;
-        const glm::vec3 &b = nodes[tri.indices[1]].position;
-        const glm::vec3 &c = nodes[tri.indices[2]].position;
+        const glm::vec3 &a = wave.nodes[tri.indices[0]].position;
+        const glm::vec3 &b = wave.nodes[tri.indices[1]].position;
+        const glm::vec3 &c = wave.nodes[tri.indices[2]].position;
 
         // normalna geometryczna
         glm::vec3 ab = b - a;
@@ -1694,15 +1695,15 @@ static inline bool touchesMicrophonePoint(int nodeIndex)
     return false;
 }
 
-int pruneSlowNodes(float minEnergy)
+int pruneSlowNodes(Wave& wave, float minEnergy)
 {
-    if (nodes.empty())
+    if (wave.nodes.empty())
         return 0;
 
     float thr2 = std::abs(minEnergy) / 200.0f;
     if (thr2 <= 0)
         thr2 = 0.05f;
-    const size_t N = nodes.size();
+    const size_t N = wave.nodes.size();
 
     std::vector<int> remap(N, -1);
     std::vector<node> kept;
@@ -1711,16 +1712,16 @@ int pruneSlowNodes(float minEnergy)
     int test = 0;
     for (size_t i = 0; i < N; ++i)
     {
-        float p = nodes[i].energy;
+        float p = wave.nodes[i].energy;
         float r = time_passed * SOUND_V;
-        float E = std::abs(nodes[i].energy);
+        float E = std::abs(wave.nodes[i].energy);
         if (r > 1)
             E = p / (r);
 
         bool EnergyEnough = (E >= thr2);
-        glm::vec3 buf = nodes[i].position - glm::vec3(Mic.mic_x, Mic.mic_y, Mic.mic_z);
+        glm::vec3 buf = wave.nodes[i].position - glm::vec3(Mic.mic_x, Mic.mic_y, Mic.mic_z);
         bool hitMic = false;
-        hitMic = touchesMicrophonePoint((int)i);
+        hitMic = touchesMicrophonePoint(wave, (int)i);
 
         if (hitMic)
         {
@@ -1728,25 +1729,25 @@ int pruneSlowNodes(float minEnergy)
             float T = gWinPackets[gWinIdx].tEmit + time_passed;                                                  // czas przyjscia pocz�tku okna
             const int wid = gWinIdx;
             // Je�eli ten node jest czasowo st�umiony nie loguj do CSV
-            if (T <= nodes[i].suppressUntilT)
+            if (T <= wave.nodes[i].suppressUntilT)
             {
                 continue;
             }
 
             ktore_odbicie++;
             // DOPPLER (rozci�gni�cie/�ci�ni�cie osi czasu okna)
-            const glm::vec3 n_hat = glm::normalize(nodes[i].velocity);
+            const glm::vec3 n_hat = glm::normalize(wave.nodes[i].velocity);
             const float v_mic_proj = glm::dot(Mic.mic_velocity, n_hat);
-            float vel_test = glm::length(nodes[i].velocity);
+            float vel_test = glm::length(wave.nodes[i].velocity);
             // CECHY echa
             if (r > 1)
-                nodes[i].energy = p / (r);
+                wave.nodes[i].energy = p / (r);
             EchoHit curHit;
             curHit.T = T; //  T z bie��cej ramki
-            curHit.energy = std::fabs(nodes[i].energy);
-            curHit.bounces = nodes[i].bounces;
-            curHit.doppler = nodes[i].doppler;
-            curHit.dir_in = glm::normalize(nodes[i].velocity);
+            curHit.energy = std::fabs(wave.nodes[i].energy);
+            curHit.bounces = wave.nodes[i].bounces;
+            curHit.doppler = wave.nodes[i].doppler;
+            curHit.dir_in = glm::normalize(wave.nodes[i].velocity);
             int test = -1;
 
             const glm::vec3 micC(Mic.mic_x, Mic.mic_y, Mic.mic_z);
@@ -1763,7 +1764,7 @@ int pruneSlowNodes(float minEnergy)
                     //   przeskaluj ca�y bufor poprzedniego okna: stare T2_prev -> nowe T
                     if (match < (int)wektorPrev.size() && !wektorPrev[match].empty())
                     {
-                        retime_echo(wektorPrev[match], /*newEnd=*/T, gPrevHits[match].energy, nodes[i].energy);
+                        retime_echo(wektorPrev[match], /*newEnd=*/T, gPrevHits[match].energy, wave.nodes[i].energy);
                         // interpolacja -> Mic csv
                         float new_T = flush_echo_interpolated(wektorPrev[match], /*TS_native=*/inv_fp, /*quantize=*/true);
                         wektorPrev[match].clear();
@@ -1771,7 +1772,7 @@ int pruneSlowNodes(float minEnergy)
                 }
             }
             // T2 liczymy dopiero po korekcie czasu T
-            T2 = T + win_s * nodes[i].doppler * ((1) / (vel_test - v_mic_proj));
+            T2 = T + win_s * wave.nodes[i].doppler * ((1) / (vel_test - v_mic_proj));
             curHit.T2 = T2;
             gCurrHits.push_back(curHit);
 
@@ -1785,7 +1786,7 @@ int pruneSlowNodes(float minEnergy)
                 const auto &wp = gWinPackets[wid];
                 const float Awin = (wp.amplitude != 0.0f) ? wp.amplitude : 1e-12f;
                 // --- sta�e do amplitudy
-                const float scaleAmp = std::fabs(nodes[i].energy / Awin);
+                const float scaleAmp = std::fabs(wave.nodes[i].energy / Awin);
 
                 // BUFOR: (t_abs, val) dla wszystkich pr�bek okna
                 std::vector<std::pair<float, float>> tmp;
@@ -1822,12 +1823,12 @@ int pruneSlowNodes(float minEnergy)
             const float blind_until = T + 0.00005f;
 
             // parametry filtr�w klastra
-            const glm::vec3 center = nodes[i].position; // pozycja trafionego noda
+            const glm::vec3 center = wave.nodes[i].position; // pozycja trafionego noda
             // const glm::vec3 micC = glm::vec3(Mic.mic_x, Mic.mic_y, Mic.mic_z);
             const float cosMax = std::cos(glm::radians(20.0f));          // max r�nica kierunku
-            const float s_i = glm::dot(micC - nodes[i].position, n_hat); // proxy czasu doj�cia
+            const float s_i = glm::dot(micC - wave.nodes[i].position, n_hat); // proxy czasu doj�cia
 
-            for (size_t j = 0; j < nodes.size(); ++j)
+            for (size_t j = 0; j < wave.nodes.size(); ++j)
             {
                 if (j == i)
                     continue;
@@ -1837,12 +1838,12 @@ int pruneSlowNodes(float minEnergy)
                     continue;
 
                 // Zgodny kierunek propagacji (wyklucz inne odbicia)
-                const glm::vec3 nj_hat = glm::normalize(nodes[j].velocity);
+                const glm::vec3 nj_hat = glm::normalize(wave.nodes[j].velocity);
                 if (glm::dot(n_hat, nj_hat) < cosMax)
                     continue;
 
                 // Node musi zbli�a� si� do mikrofonu
-                const float s_j = glm::dot(micC - nodes[j].position, nj_hat);
+                const float s_j = glm::dot(micC - wave.nodes[j].position, nj_hat);
                 // if (s_j <= 0.0f) continue;
 
                 // Zbli�ony przewidywany czas doj�cia
@@ -1850,10 +1851,10 @@ int pruneSlowNodes(float minEnergy)
                     continue;
 
                 // Blisko w przestrzeni (ok. �3 tr�jk�ty�)
-                if (glm::length(nodes[j].position - center) > gBlindRadius)
+                if (glm::length(wave.nodes[j].position - center) > gBlindRadius)
                     continue;
 
-                // Ustaw t�umienie do blind_until � zar�wno w nodes[] i  kept[]
+                // Ustaw t�umienie do blind_until � zar�wno w wave.nodes[] i  kept[]
                 if (remap[j] != -1)
                 {
                     const int kj = remap[j];
@@ -1861,7 +1862,7 @@ int pruneSlowNodes(float minEnergy)
                 }
                 else
                 {
-                    nodes[j].suppressUntilT = std::max(nodes[j].suppressUntilT, blind_until);
+                    wave.nodes[j].suppressUntilT = std::max(wave.nodes[j].suppressUntilT, blind_until);
                 }
             }
 
@@ -1875,7 +1876,7 @@ int pruneSlowNodes(float minEnergy)
         if (EnergyEnough)
         {
             remap[i] = (int)kept.size();
-            node cp = nodes[i];
+            node cp = wave.nodes[i];
             kept.push_back(cp);
         }
     }
@@ -1894,18 +1895,18 @@ int pruneSlowNodes(float minEnergy)
         }
     }
 
-    nodes.swap(kept);
+    wave.nodes.swap(kept);
     triangles.swap(newTris);
 
     // Uniewa�nij cache i rebuild VBO
     gRefineCursor = 0;
-    gEdgeMidCache.clear();
+    wave.gEdgeMidCache.clear();
     gMeshDirty = true;
 
     if (doKill)
         killAllNodes(); // do testow
     // zgasniecie fali
-    const bool windowDied = nodes.empty();
+    const bool windowDied = wave.nodes.empty();
 
     if (windowDied)
     {
@@ -1939,7 +1940,7 @@ int pruneSlowNodes(float minEnergy)
         // rewind_punkt = false;
     }
 
-    return (int)(N - nodes.size());
+    return (int)(N - wave.nodes.size());
 }
 
 void drawCuboidTransparentSorted(struct Cuboid_dimensions temp_Cube)
@@ -2038,14 +2039,14 @@ void drawCuboidTransparentSorted(struct Cuboid_dimensions temp_Cube)
 }
 
 // Zabija wszystkie nody i tr�jk�ty � do debugu.
-void killAllNodes()
+void killAllNodes(Wave& wave)
 {
-    nodes.clear();
+    wave.nodes.clear();
     triangles.clear();
 
     // wyczy�� stan mesh
     gRefineCursor = 0;
-    gEdgeMidCache.clear();
+    wave.gEdgeMidCache.clear();
     gMeshDirty = true;
 
     // gIndexCount = 0;

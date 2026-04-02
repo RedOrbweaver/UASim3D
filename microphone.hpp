@@ -12,4 +12,10 @@ class Microphone
     glm::vec3 mic_velocity = glm::vec3(20.0f, 000.0f, 0.0f);
     glm::vec3 rewind_point = glm::vec3(mic_x, mic_y, mic_z);
     glm::vec3 rewind_vel = mic_velocity;
+    std::vector<node> verts;
+
+    Microphone()
+    {
+
+    }
 };

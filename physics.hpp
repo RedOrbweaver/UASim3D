@@ -1,4 +1,4 @@
-void updatePhysics(float dt, float& window_ms, float& time_passed, Wave& wave, source& Source, Microphone& Mic, struct Cuboid_dimensions Pool, struct Cuboid_dimensions temp_Obstacle) // glowna petla fizyki programu
+inline void updatePhysics(float dt, float& window_ms, float& time_passed, Wave& wave, source& Source, Microphone& Mic, struct Cuboid_dimensions Pool, struct Cuboid_dimensions temp_Obstacle) // glowna petla fizyki programu
 {
     const float Pool_halfW = 0.5f * Pool.width;
     const float Pool_halfH = 0.5f * Pool.height;
