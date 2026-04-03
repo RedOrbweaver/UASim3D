@@ -8,7 +8,6 @@ inline void updatePhysics(float dt, float& window_ms, float& time_passed, Wave& 
     const float eps = 0.001f; // minimalne odsuni�cie od �ciany
 
     const float micR = Mic.radius;
-    ++gFrameId;
     // Pomocnik do odbicia
     auto bounce1D = [&](float &pos, float &vel, float minb, float maxb) -> int
     {

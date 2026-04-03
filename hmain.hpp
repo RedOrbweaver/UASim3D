@@ -1,3 +1,4 @@
+#pragma once
 // #include <glad/glad.h>
 #include <GLES3/gl3.h>
 #include <GL/glew.h>
@@ -20,6 +21,8 @@
 #include "libraries/imgui-master/imgui_impl_glfw.h"
 #include "libraries/imgui-master/imgui_impl_opengl3.h"
 #include "libraries/imgui-master/imgui_impl_opengl3_loader.h"
+
+inline bool rewind_punkt = false;
 
 #include "datatypes.hpp"
 #include "wave.hpp"

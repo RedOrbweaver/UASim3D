@@ -125,8 +125,8 @@ bool write_two_vectors_csv(const std::string &filepath,
 }
 
 int test = 0;
-std::string file = "kryzys.csv";           // plik wejsciowy
-std::string write_file = "kryzys_out.csv"; // plik wyjsciowy
+std::string file = "data/kryzys.csv";           // plik wejsciowy
+std::string write_file = "output/kryzys_out.csv"; // plik wyjsciowy
 // int windows_number = 2 * 5 * 5 * 2*2;
 int windows_number = 10; // ile okien symulacji ma przejsc
 
@@ -139,14 +139,12 @@ std::vector<float> time_T2_prev;
 static constexpr float R0_ATTEN = 0.0001f; // [m] � near-field cap (np. 5 cm)
 
 // globalne
-static uint32_t gFrameId = 0;
 static float gAvgEdgeLen = 0.0f;                     // siatka
 static int gBlindRings = 9 * 3 * 9 * 27 * 9 * 9 * 9; // 3 tr�jk�ty
 static float gBlindRadius = 0.0f;                    // = gBlindRings * gAvgEdgeLen
 
 static constexpr float SOUND_V = 1440.0f / 1.0f; // C++
 bool serio_first = false;
-bool rewind_punkt = false;
 
 static size_t gWinIdx = 0; // kt�ry 5 ms segment aktualnie nadajemy
 
@@ -230,12 +228,12 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
-void RenderWave();
+void RenderWave(Wave& wave);
 // void drawCuboid(float width, float height, float depth);
 void drawCuboidTransparentSorted(struct Cuboid_dimensions temp_Cube);
-int printOversizedTriangles(float maxArea);
+int printOversizedTriangles(Wave& wave, float maxArea);
 // Ustawia w�z�y w pozycji �r�d�a i nadaje im pr�dko�ci/kierunki startowe.
-void killAllNodes();
+void killAllNodes(Wave& wave);
 void buildBuffersFor(const std::vector<node> &verts, const std::vector<Triangle> &tris, MeshGL &m, bool dynamic = true);
 void updatePositionsFor(const std::vector<node> &verts, MeshGL &m);
 void drawMesh(const MeshGL &m, const glm::vec3 &offset = glm::vec3(0), const glm::vec4 &fill = glm::vec4(1.0f, 0.5f, 0.0f, 1.0f), const glm::vec4 &wire = glm::vec4(0.0f, 0.0f, 0.0f, 0.6f), float wireWidth = 0.2f);
@@ -582,7 +580,7 @@ static float flush_echo_interpolated(const std::vector<std::pair<float, float>> 
     return new_T;
 }
 
-int pruneSlowNodes(float minSpeed);
+int pruneSlowNodes(Wave& wave, float minSpeed);
 
 static float dist2PointSegment(const glm::vec3 &p,
                                const glm::vec3 &a,
@@ -1002,6 +1000,7 @@ void calculateFPS()
     double currentTime = glfwGetTime();
     frameCount++;
 
+    
     if (currentTime - previousTime >= 1.0)
     {
         fps = frameCount / (currentTime - previousTime);
@@ -1009,7 +1008,8 @@ void calculateFPS()
 
         frameCount = 0;
         previousTime = currentTime;
-        printOversizedTriangles(0.05f);
+        for (auto& wave : waves)
+            printOversizedTriangles(wave, 0.05f);
     }
 } // pokaz ile fps ma program
 
@@ -1036,145 +1036,6 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 }
 
 static void glfwErrorCallback(int code, const char *desc) { fprintf(stderr, "GLFW[%d]: %s\n", code, desc); }
-
-//---------------------
-//--------MAIN---------
-//---------------------
-int main()
-{
-    glfwSetErrorCallback(glfwErrorCallback);
-    if (!glfwInit())
-        return -1;
-
-    bool pokazano_dane = false; // testowe, do usuniecia
-
-    GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Symulacja", NULL, NULL);
-    if (!window)
-    {
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-
-    // Wczytaj plik csv (ze sciezki wyzej)
-    if (!loadCsvSimple(file, ',', /*hasHeader=*/true))
-    {
-        std::cerr << "CSV: nie wczytano �adnych danych\n";
-    }
-    else
-    {
-        std::cout << "CSV: wczytano " << tSec.size()
-                  << " wierszy" << std::endl;
-    }
-    // beginNextWindow(); // uruchamiamy pierwsze okno 5 ms
-    // gAudio.window_ms = 5.0f;   // trzymamy 5 ms
-
-    // to pod tym dodane do VBO
-    // if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    //     std::cerr << "GLAD fail\n"; return -1;
-    // }
-    // std::cout << "GL " << GLVersion.major << "." << GLVersion.minor << "\n";
-    // glEnable(GL_DEPTH_TEST);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-
-    // Rzeczy od ImGui
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext(); // inicjalizacja ImGui
-    ImGuiIO &io = ImGui::GetIO();
-    (void)io;
-    ImGui::StyleColorsDark();                   // ciemny motyw imgui
-    ImGui_ImplGlfw_InitForOpenGL(window, true); // setup
-    ImGui_ImplOpenGL3_Init("#version 330");
-
-    while (!glfwWindowShouldClose(window))
-    {
-        float currentFrame = glfwGetTime();
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
-
-        processInput(window);
-
-        glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-
-        glMatrixMode(GL_PROJECTION);
-        glLoadMatrixf(&projection[0][0]);
-
-        glMatrixMode(GL_MODELVIEW);
-        glLoadMatrixf(&view[0][0]);
-
-        // Oblicz FPS
-        // calculateFPS();
-        // if (true)
-        //{
-        for (auto& wave : waves)
-            RenderWave(wave);
-        //}
-
-        glfwPollEvents();
-
-        //---IMGUI---
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-        ImGui::SetWindowSize(ImVec2(200, 200));
-
-        ImGui::Begin("Start/Stop");
-        if (ImGui::Button("Start"))
-        {
-            simulate = true;
-        }
-        if (ImGui::Button("Stop"))
-        {
-            simulate = false;
-        }
-        ImGui::End();
-
-        ImGui::Begin("Parametry");
-        ImGui::Text("Mikrofon");
-        ImGui::InputFloat("Mic x", &Mic.mic_x, 0.1f, Mic.mic_x);
-        ImGui::InputFloat("Mic y", &Mic.mic_y, 0.1f, Mic.mic_y);
-        ImGui::InputFloat("Mic z", &Mic.mic_z, 0.1f, Mic.mic_z);
-        ImGui::InputFloat("Mic_vel x", &Mic.mic_velocity.x, 5.0f, Mic.mic_velocity.x);
-        ImGui::InputFloat("Mic_vel y", &Mic.mic_velocity.y, 5.0f, Mic.mic_velocity.y);
-        ImGui::InputFloat("Mic_vel z", &Mic.mic_velocity.z, 5.0f, Mic.mic_velocity.z);
-        ImGui::Text("Zrodlo");
-        ImGui::InputFloat("Src x", &Source.src_x, 0.1f, Source.src_x);
-        ImGui::InputFloat("Src y", &Source.src_y, 0.1f, Source.src_y);
-        ImGui::InputFloat("Src z", &Source.src_z, 0.1f, Source.src_z);
-        ImGui::InputFloat("Src_vel x", &Source.velocity.x, 5.0f, Source.velocity.x);
-        ImGui::InputFloat("Src_vel y", &Source.velocity.y, 5.0f, Source.velocity.y);
-        ImGui::InputFloat("Src_vel z", &Source.velocity.z, 5.0f, Source.velocity.z);
-        ImGui::Text("Basen");
-        ImGui::InputFloat("Cube width", &Cube.width, 2.0f, Cube.width);
-        ImGui::InputFloat("Cube height", &Cube.height, 2.0f, Cube.height);
-        ImGui::InputFloat("Cube depth", &Cube.depth, 2.0f, Cube.depth);
-        ImGui::InputFloat("Cube x_offset", &Cube.x_offset, 2.0f, Cube.x_offset);
-        ImGui::InputFloat("Cube y_offset", &Cube.y_offset, 2.0f, Cube.y_offset);
-        ImGui::InputFloat("Cube z_offset", &Cube.z_offset, 2.0f, Cube.z_offset);
-        ImGui::End();
-
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        //---Koniec IMGUI----
-
-        glfwSwapBuffers(window);
-    }
-
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-
-    glfwTerminate();
-    return 0;
-}
 
 void processInput(GLFWwindow *window)
 {
@@ -1399,7 +1260,7 @@ void RenderWave(Wave& wave)
     {
         // updatePhysics(dt, Cube, Obstacle);
         // usuwanie zuzytych nodes
-        pruneSlowNodes(/*minEnergy=*/getAtTime((gWinIdx)*window_ms / 1000.0f));
+        pruneSlowNodes(wave, getAtTime((gWinIdx)*window_ms / 1000.0f));
         updatePhysics(dt, window_ms, time_passed, wave, Source, Mic, Cube, Obstacle);
     }
 
@@ -1904,7 +1765,7 @@ int pruneSlowNodes(Wave& wave, float minEnergy)
     gMeshDirty = true;
 
     if (doKill)
-        killAllNodes(); // do testow
+        killAllNodes(wave); // do testow
     // zgasniecie fali
     const bool windowDied = wave.nodes.empty();
 
@@ -2205,4 +2066,146 @@ static void buildIcosphereNodesTris(float radius, int subdiv,
     {
         out_tris.push_back({{f.x, f.y, f.z}});
     }
+}
+
+
+//---------------------
+//--------MAIN---------
+//---------------------
+int main()
+{
+    glfwSetErrorCallback(glfwErrorCallback);
+    if (!glfwInit())
+        return -1;
+
+    bool pokazano_dane = false; // testowe, do usuniecia
+
+    GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Symulacja", NULL, NULL);
+    if (!window)
+    {
+        glfwTerminate();
+        return -1;
+    }
+    glfwMakeContextCurrent(window);
+
+    // Wczytaj plik csv (ze sciezki wyzej)
+    if (!loadCsvSimple(file, ',', /*hasHeader=*/true))
+    {
+        std::cerr << "CSV: nie wczytano �adnych danych\n";
+    }
+    else
+    {
+        std::cout << "CSV: wczytano " << tSec.size()
+                  << " wierszy" << std::endl;
+    }
+    // beginNextWindow(); // uruchamiamy pierwsze okno 5 ms
+    // gAudio.window_ms = 5.0f;   // trzymamy 5 ms
+
+    // to pod tym dodane do VBO
+    // if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+    //     std::cerr << "GLAD fail\n"; return -1;
+    // }
+    // std::cout << "GL " << GLVersion.major << "." << GLVersion.minor << "\n";
+    // glEnable(GL_DEPTH_TEST);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
+    glfwSetScrollCallback(window, scroll_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+    // Rzeczy od ImGui
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext(); // inicjalizacja ImGui
+    ImGuiIO &io = ImGui::GetIO();
+    (void)io;
+    ImGui::StyleColorsDark();                   // ciemny motyw imgui
+    ImGui_ImplGlfw_InitForOpenGL(window, true); // setup
+    ImGui_ImplOpenGL3_Init("#version 330");
+
+    waves.push_back(Wave());
+
+    while (!glfwWindowShouldClose(window))
+    {
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
+        processInput(window);
+
+        glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+
+        glMatrixMode(GL_PROJECTION);
+        glLoadMatrixf(&projection[0][0]);
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadMatrixf(&view[0][0]);
+
+        // Oblicz FPS
+        // calculateFPS();
+        // if (true)
+        //{
+        for (auto& wave : waves)
+            RenderWave(wave);
+        //}
+
+        glfwPollEvents();
+
+        //---IMGUI---
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        ImGui::SetWindowSize(ImVec2(200, 200));
+
+        ImGui::Begin("Start/Stop");
+        if (ImGui::Button("Start"))
+        {
+            simulate = true;
+        }
+        if (ImGui::Button("Stop"))
+        {
+            simulate = false;
+        }
+        ImGui::End();
+
+        ImGui::Begin("Parametry");
+        ImGui::Text("Mikrofon");
+        ImGui::InputFloat("Mic x", &Mic.mic_x, 0.1f, Mic.mic_x);
+        ImGui::InputFloat("Mic y", &Mic.mic_y, 0.1f, Mic.mic_y);
+        ImGui::InputFloat("Mic z", &Mic.mic_z, 0.1f, Mic.mic_z);
+        ImGui::InputFloat("Mic_vel x", &Mic.mic_velocity.x, 5.0f, Mic.mic_velocity.x);
+        ImGui::InputFloat("Mic_vel y", &Mic.mic_velocity.y, 5.0f, Mic.mic_velocity.y);
+        ImGui::InputFloat("Mic_vel z", &Mic.mic_velocity.z, 5.0f, Mic.mic_velocity.z);
+        ImGui::Text("Zrodlo");
+        ImGui::InputFloat("Src x", &Source.src_x, 0.1f, Source.src_x);
+        ImGui::InputFloat("Src y", &Source.src_y, 0.1f, Source.src_y);
+        ImGui::InputFloat("Src z", &Source.src_z, 0.1f, Source.src_z);
+        ImGui::InputFloat("Src_vel x", &Source.velocity.x, 5.0f, Source.velocity.x);
+        ImGui::InputFloat("Src_vel y", &Source.velocity.y, 5.0f, Source.velocity.y);
+        ImGui::InputFloat("Src_vel z", &Source.velocity.z, 5.0f, Source.velocity.z);
+        ImGui::Text("Basen");
+        ImGui::InputFloat("Cube width", &Cube.width, 2.0f, Cube.width);
+        ImGui::InputFloat("Cube height", &Cube.height, 2.0f, Cube.height);
+        ImGui::InputFloat("Cube depth", &Cube.depth, 2.0f, Cube.depth);
+        ImGui::InputFloat("Cube x_offset", &Cube.x_offset, 2.0f, Cube.x_offset);
+        ImGui::InputFloat("Cube y_offset", &Cube.y_offset, 2.0f, Cube.y_offset);
+        ImGui::InputFloat("Cube z_offset", &Cube.z_offset, 2.0f, Cube.z_offset);
+        ImGui::End();
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        //---Koniec IMGUI----
+
+        glfwSwapBuffers(window);
+    }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    glfwTerminate();
+    return 0;
 }
