@@ -7,11 +7,84 @@
 
 
 
+int test = 0;
 
-//std::vector<Wave> waves;
+
+
+//float T2 = 0;
+
+std::vector<float> time_T2;
+std::vector<float> time_T2_prev;
+
+bool serio_first = true;
+
+
+
+
+
+
+
+
+// WAZNE DANE
+float time_passed = 0.0f;
+float window_ms = 1.0f;
+// dane z csv
+std::vector<double> tSec; // czas w sekundach (po przeskalowaniu)
+std::vector<float> y;     // warto�ci pr�bek (2. kolumna)
+
+int screen_width = 1280;
+int screen_height = 720;
+
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+bool firstMouse = true;
+bool mousePressed = false;
+float lastX = screen_width / 2.0f;
+float lastY = screen_height / 2.0f;
+float yaw = -90.0f;
+float pitch = 0.0f;
+float fov = 45.0f;
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+
+bool simulate = false;
+
+std::vector<Triangle> microphone;
+std::vector<Triangle> source_tri;
+
+// fala mikrofon i zrodlo
+static MeshGL gWaveGL, gMicGL, gSrcGL;
+
+// do FPS
+int frameCount = 0;
+double previousTime = 0.0;
+double fps = 0.0;
+
+bool first = true;
+
+
+
+std::vector<float> winMean; // �rednie z okien X ms
+
+
+Cuboid_dimensions Cube
+{
+    20.0f, 6.0f, 15.0f, // width, height, depth
+    0.0f, 0.0f, 0.0f    // x/y/z offset
+};
+
+Cuboid_dimensions Obstacle
+{
+    0.3f, 0.7f, 0.7f,   // width, height, depth
+    500.0f, 1.0f, 50.0f // x/y/z offset
+};
+
+
+SoundSource source;
+Microphone Mic;
 Wave current_wave;
-
-
 
 bool write_two_vectors_csv(const std::string &filepath,
                            const std::vector<float> &test_T,
@@ -57,106 +130,6 @@ bool write_two_vectors_csv(const std::string &filepath,
     out.flush();
     return out.good();
 }
-
-int test = 0;
-
-
-
-//float T2 = 0;
-
-std::vector<float> time_T2;
-std::vector<float> time_T2_prev;
-
-static constexpr float R0_ATTEN = 0.0001f; // [m] � near-field cap (np. 5 cm)
-
-
-bool serio_first = true;
-
-
-
-// WAZNE DANE
-float radius = 0.02f;
-float time_passed = 0.0f;
-float window_ms = 1.0f;
-// dane z csv
-std::vector<double> tSec; // czas w sekundach (po przeskalowaniu)
-std::vector<float> y;     // warto�ci pr�bek (2. kolumna)
-
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
-
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-
-bool firstMouse = true;
-bool mousePressed = false;
-float lastX = SCR_WIDTH / 2.0f;
-float lastY = SCR_HEIGHT / 2.0f;
-float yaw = -90.0f;
-float pitch = 0.0f;
-float fov = 45.0f;
-float deltaTime = 0.0f;
-float lastFrame = 0.0f;
-
-bool simulate = false;
-
-std::vector<Triangle> microphone;
-std::vector<Triangle> source_tri;
-
-// fala mikrofon i zrodlo
-static MeshGL gWaveGL, gMicGL, gSrcGL;
-
-// do FPS
-int frameCount = 0;
-double previousTime = 0.0;
-double fps = 0.0;
-
-bool first = true;
-
-
-
-std::vector<float> winMean; // �rednie z okien X ms
-
-
-
-
-
-
-source Source;
-
-
-Cuboid_dimensions Cube{
-    20.0f, 6.0f, 15.0f, // width, height, depth
-    0.0f, 0.0f, 0.0f    // x/y/z offset
-};
-
-Cuboid_dimensions Obstacle{
-    0.3f, 0.7f, 0.7f,   // width, height, depth
-    500.0f, 1.0f, 50.0f // x/y/z offset
-};
-
-
-Microphone Mic;
-
-// #include <cstdlib> // wymagane dla exit()
-void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-void mouse_callback(GLFWwindow *window, double xpos, double ypos);
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
-void processInput(GLFWwindow *window);
-void RenderWave(Wave& wave);
-// void drawCuboid(float width, float height, float depth);
-void drawCuboidTransparentSorted(struct Cuboid_dimensions temp_Cube);
-int printOversizedTriangles(Wave& wave, float maxArea);
-// Ustawia w�z�y w pozycji �r�d�a i nadaje im pr�dko�ci/kierunki startowe.
-void killAllNodes(Wave& wave);
-void buildBuffersFor(const std::vector<node> &verts, const std::vector<Triangle> &tris, MeshGL &m, bool dynamic = true);
-void updatePositionsFor(const std::vector<node> &verts, MeshGL &m);
-void drawMesh(const MeshGL &m, const glm::vec3 &offset = glm::vec3(0), const glm::vec4 &fill = glm::vec4(1.0f, 0.5f, 0.0f, 1.0f), const glm::vec4 &wire = glm::vec4(0.0f, 0.0f, 0.0f, 0.6f), float wireWidth = 0.2f);
-static void buildIcosphereNodesTris(float radius, int subdiv, std::vector<node> &out_nodes, std::vector<Triangle> &out_tris);
-// Zapis do pliku po symulacji
-// int removeSlowNodes(float minSpeed);
-
 
 
 // do separatora
@@ -322,15 +295,9 @@ static bool beginNextWindow()
     if (gWinPackets[gWinIdx].times.size() < 2)
         return false;
     first = true; // nowa fala
+    current_wave.Begin(source, gWinPackets[gWinIdx]);
     return true;
 }
-
-
-
-
-
-
-
 
 float calculateTriangleArea(Wave& wave, const std::vector<node>& nodes, int a, int b, int c)
 {
@@ -355,7 +322,7 @@ void calculateFPS()
         previousTime = currentTime;
         // for (auto& wave : waves)
         //     printOversizedTriangles(wave, 0.05f);
-        printOversizedTriangles(current_wave, 0.05f);
+        printOversizedTriangles(current_wave, Cube, 0.05f);
     }
 } // pokaz ile fps ma program
 
@@ -441,6 +408,47 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
+
+
+void drawMesh(const MeshGL &m, const glm::vec3 &offset = glm::vec3(0), 
+    const glm::vec4 &fill = glm::vec4(1.0f, 0.5f, 0.0f, 1.0f), 
+    const glm::vec4 &wire = glm::vec4(0.0f, 0.0f, 0.0f, 0.6f), 
+    float wireWidth = 0.2f)
+{
+    if (!m.vbo || !m.ibo || m.indexCount == 0)
+        return;
+
+    glPushMatrix();
+    if (offset.x != 0 || offset.y != 0 || offset.z != 0)
+        glTranslatef(offset.x, offset.y, offset.z);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m.vbo);
+    glEnableClientState(GL_VERTEX_ARRAY); // compat profile
+    glVertexPointer(3, GL_FLOAT, (GLsizei)sizeof(node), (const void *)offsetof(node, position));
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.ibo);
+
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(1.0f, 1.0f);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glColor4f(fill.r, fill.g, fill.b, fill.a);
+    glDrawElements(GL_TRIANGLES, m.indexCount, GL_UNSIGNED_INT, (void *)0);
+
+    glDisable(GL_POLYGON_OFFSET_FILL);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glLineWidth(wireWidth);
+    glColor4f(wire.r, wire.g, wire.b, wire.a);
+    glDrawElements(GL_TRIANGLES, m.indexCount, GL_UNSIGNED_INT, (void *)0);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glPopMatrix();
+}
+
 void RenderWave(Wave& wave)
 {
     // glEnable(GL_BLEND);
@@ -457,15 +465,12 @@ void RenderWave(Wave& wave)
         Mic.mic_z = Mic.rewind_point.z;
         Mic.mic_velocity = Mic.rewind_vel;
         // source
-        Source.src_x = Source.rewind_point.x;
-        Source.src_y = Source.rewind_point.y;
-        Source.src_z = Source.rewind_point.z;
-        Source.velocity = Source.rewind_vel;
+        source.src_x = source.rewind_point.x;
+        source.src_y = source.rewind_point.y;
+        source.src_z = source.rewind_point.z;
+        source.velocity = source.rewind_vel;
 
         rewind_punkt = true;
-
-        wave.nodes.clear();
-        wave.triangles.clear();
 
         if (serio_first)
         {
@@ -477,112 +482,20 @@ void RenderWave(Wave& wave)
             microphone.clear();
             buildIcosphereNodesTris(Mic.radius, SUBDIV_RIGID, Mic.verts, microphone);
 
-            Source.verts.clear();
+            source.verts.clear();
             source_tri.clear();
-            buildIcosphereNodesTris(Source.radius, SUBDIV_RIGID, Source.verts, source_tri);
+            buildIcosphereNodesTris(source.radius, SUBDIV_RIGID, source.verts, source_tri);
 
             // Bufory GPU :
             buildBuffersFor(Mic.verts, microphone, gMicGL, /*dynamic=*/false);
-            buildBuffersFor(Source.verts, source_tri, gSrcGL, /*dynamic=*/false);
-        }
-        // gestosc - ka�dy poziom �4 liczba tr�jk�t�w
-        constexpr int SUBDIV = 2; // 2 optymalnie, wiecej laguje
-        // 12 wierzcho�k�w  na sferze o promieniu 'radius'
-        const float t = (1.0f + std::sqrt(5.0f)) * 0.5f; // z�ota proporcja
-        std::vector<glm::vec3> verts = {
-            glm::normalize(glm::vec3(-1, t, 0)),
-            glm::normalize(glm::vec3(1, t, 0)),
-            glm::normalize(glm::vec3(-1, -t, 0)),
-            glm::normalize(glm::vec3(1, -t, 0)),
-
-            glm::normalize(glm::vec3(0, -1, t)),
-            glm::normalize(glm::vec3(0, 1, t)),
-            glm::normalize(glm::vec3(0, -1, -t)),
-            glm::normalize(glm::vec3(0, 1, -t)),
-
-            glm::normalize(glm::vec3(t, 0, -1)),
-            glm::normalize(glm::vec3(t, 0, 1)),
-            glm::normalize(glm::vec3(-t, 0, -1)),
-            glm::normalize(glm::vec3(-t, 0, 1)),
-        };
-        for (auto &v : verts)
-            v *= radius; // na promie� 'radius'
-
-        // 20 �cian
-        std::vector<glm::ivec3> faces = {
-            {0, 11, 5}, {0, 5, 1}, {0, 1, 7}, {0, 7, 10}, {0, 10, 11}, {1, 5, 9}, {5, 11, 4}, {11, 10, 2}, {10, 7, 6}, {7, 1, 8}, {3, 9, 4}, {3, 4, 2}, {3, 2, 6}, {3, 6, 8}, {3, 8, 9}, {4, 9, 5}, {2, 4, 11}, {6, 2, 10}, {8, 6, 7}, {9, 8, 1}};
-        /*
-        std::vector<glm::ivec3> faces = {
-            {0,11,5}, {0,5,1}, {0,1,7}, {0,7,10}, {0,10,11},
-            {1,5,9},  {5,11,4}, {11,10,2}, {10,7,6}, {7,1,8},
-            {3,9,4},  {3,4,2},  {3,2,6},  {3,6,8},  {3,8,9},
-            {4,9,5},  {2,4,11}, {6,2,10}
-        };*/
-
-        // Podzial
-        for (int s = 0; s < SUBDIV; ++s)
-        {
-            std::unordered_map<uint64_t, int> cache;
-            std::vector<glm::ivec3> new_faces;
-            new_faces.reserve(faces.size() * 4);
-
-            for (const auto &f : faces)
-            {
-                int i0 = f.x, i1 = f.y, i2 = f.z;
-
-                int a = midpoint_index(i0, i1, verts, cache, radius);
-                int b = midpoint_index(i1, i2, verts, cache, radius);
-                int c = midpoint_index(i2, i0, verts, cache, radius);
-
-                // 4 nowe tr�jk�ty
-                new_faces.push_back({i0, a, c});
-                new_faces.push_back({i1, b, a});
-                new_faces.push_back({i2, c, b});
-                new_faces.push_back({a, b, c});
-            }
-            faces.swap(new_faces);
+            buildBuffersFor(source.verts, source_tri, gSrcGL, /*dynamic=*/false);
         }
 
-        wave.nodes.reserve(verts.size());
-        glm::vec3 buf2 = glm::vec3(Source.src_x, Source.src_y, Source.src_z);
-        glm::vec3 gSourceVel = Source.velocity;
-        // const float audioE = getAtTime((gWinIdx)*window_ms / 1000.0f);
-        const auto &wp = gWinPackets[gWinIdx]; // aktualne 5 ms
-        int i = 0;
-        for (const auto &p : verts)
-        {
-            node nd;
-            nd.position = p;
-            // nd.nEmit = glm::normalize(p);
-            nd.velocity = glm::normalize(p) * SOUND_V; // sta�a pr�dko�� fali w wodzie
-
-            nd.position += buf2;
-            nd.doppler = glm::length(nd.velocity) + glm::length(Source.velocity);
-            // nd.srcVel = gSourceVel;
-            // nd.energy = audioE;
-            // nd.tEmit = (gWinIdx)*gAudio.window_ms / 1000.0f; // zapisz czas emisji (sim-time)
-            // nd.tEmit = (gWinIdx)*window_ms / 1000.0f;
-
-            nd.energy = wp.amplitude; // amplituda okna
-            nd.tEmit = wp.tEmit;      // czas emisji okna (sek)
-            // nd.winId = (int)gWinIdx;
-            nd.seedId = i++;
-
-            wave.nodes.push_back(nd);
-        }
-
-        wave.triangles.reserve(faces.size());
-        for (const auto &f : faces)
-        {
-            wave.triangles.push_back({{f.x, f.y, f.z}});
-            // break;
-        }
         // buildSphereBuffers(/*dynamic=*/true);
         buildBuffersFor(wave.nodes, wave.triangles, gWaveGL, /*dynamic=*/true);
 
         // po zbudowaniu dwudziestoscianu
-        gAvgEdgeLen = computeAvgEdgeLen(verts, faces);
-        gBlindRadius = gBlindRings * gAvgEdgeLen;
+        
         // gBlindRadius = 2.5f;
 
         first = false;
@@ -634,7 +547,7 @@ void RenderWave(Wave& wave)
             }
             // rewind_punkt = false;
         }
-        updatePhysics(dt, window_ms, time_passed, wave, Source, Mic, Cube, Obstacle);
+        updatePhysics(dt, window_ms, time_passed, wave, source, Mic, Cube, Obstacle);
     }
 
     // odbuduj bufory tylko gdy trzeba
@@ -650,7 +563,7 @@ void RenderWave(Wave& wave)
         // updateSpherePositions();
         updatePositionsFor(wave.nodes, gWaveGL);
         updatePositionsFor(Mic.verts, gMicGL);
-        updatePositionsFor(Source.verts, gSrcGL);
+        updatePositionsFor(source.verts, gSrcGL);
     }
 
     // 3) rysuj TYLKO z VBO/IBO
@@ -668,320 +581,20 @@ void RenderWave(Wave& wave)
     glEnable(GL_DEPTH_TEST);
     glm::vec3 micOffset = glm::vec3(Mic.mic_x, Mic.mic_y, Mic.mic_z);
     drawMesh(gMicGL, micOffset, /*fill*/ {1.0f, 0.4f, 0.8f, 0.5f});
-    glm::vec3 srcOffset = glm::vec3(Source.src_x, Source.src_y, Source.src_z);
+    glm::vec3 srcOffset = glm::vec3(source.src_x, source.src_y, source.src_z);
     drawMesh(gSrcGL, srcOffset, /*fill*/ {1.0f, 1.0f, 1.0f, 0.5f});
     // drawMicrophone();
     // drawSource();
     // PRZESZKODA
 
     glColor4f(0.2f, 0.5f, 0.2f, 0.7f);
-    drawCuboidTransparentSorted(Obstacle);
+    drawCuboidTransparentSorted(cameraPos, Obstacle);
     // glEnable(GL_DEPTH_TEST);
     //  Basen
     // glDisable(GL_DEPTH_TEST);
     glColor4f(0.0f, 0.0f, 1.0f, 0.1f);
-    drawCuboidTransparentSorted(Cube);
+    drawCuboidTransparentSorted(cameraPos, Cube);
 } // do wyswietlania symulacji
-
-int printOversizedTriangles(Wave& wave, float maxArea)
-{
-    // te same sta�e co w refine
-    const float cuboidHalfWidth = Cube.width * 0.5f;
-    const float cuboidHalfHeight = Cube.height * 0.5f;
-    const float cuboidHalfDepth = Cube.depth * 0.5f;
-    const float safetyMargin = 0.2f;
-
-    // por�wnujemy |cross|^2 > (2*maxArea)^2
-    const float thr2 = 4.0f * maxArea * maxArea;
-
-    int count = 0;
-    for (const auto &t : wave.triangles)
-    {
-        int a = t.indices[0], b = t.indices[1], c = t.indices[2];
-        const glm::vec3 &pa = wave.nodes[a].position;
-        const glm::vec3 &pb = wave.nodes[b].position;
-        const glm::vec3 &pc = wave.nodes[c].position;
-
-        // pomijamy tr�jk�ty blisko �ciany (jak w refine)
-        const bool nearWall =
-            (std::fabs(pa.x) > cuboidHalfWidth - safetyMargin) ||
-            (std::fabs(pa.y) > cuboidHalfHeight - safetyMargin) ||
-            (std::fabs(pa.z) > cuboidHalfDepth - safetyMargin) ||
-            (std::fabs(pb.x) > cuboidHalfWidth - safetyMargin) ||
-            (std::fabs(pb.y) > cuboidHalfHeight - safetyMargin) ||
-            (std::fabs(pb.z) > cuboidHalfDepth - safetyMargin) ||
-            (std::fabs(pc.x) > cuboidHalfWidth - safetyMargin) ||
-            (std::fabs(pc.y) > cuboidHalfHeight - safetyMargin) ||
-            (std::fabs(pc.z) > cuboidHalfDepth - safetyMargin);
-
-        if (nearWall)
-            continue;
-
-        // pole bez sqrt: |(pb-pa) x (pc-pa)|^2
-        const glm::vec3 cr = glm::cross(pb - pa, pc - pa);
-        const float cr2 = glm::dot(cr, cr);
-
-        if (cr2 > thr2)
-            ++count;
-    }
-    float procent = (float)count / (float)wave.triangles.size() * 100.0f;
-    std::cout << "Oversized (splittable) triangles: "
-              << wave.triangles.size() << "\n";
-    return count;
-}
-
-
-void drawCuboidTransparentSorted(struct Cuboid_dimensions temp_Cube)
-{
-    float halfWidth = temp_Cube.width / 2.0f;
-    float halfHeight = temp_Cube.height / 2.0f;
-    float halfDepth = temp_Cube.depth / 2.0f;
-
-    glm::vec3 vertices[] = {
-        {-halfWidth + temp_Cube.x_offset, -halfHeight + temp_Cube.y_offset, halfDepth + temp_Cube.z_offset},
-        {halfWidth + temp_Cube.x_offset, -halfHeight + temp_Cube.y_offset, halfDepth + temp_Cube.z_offset},
-        {halfWidth + temp_Cube.x_offset, halfHeight + temp_Cube.y_offset, halfDepth + temp_Cube.z_offset},
-        {-halfWidth + temp_Cube.x_offset, halfHeight + temp_Cube.y_offset, halfDepth + temp_Cube.z_offset},
-        {-halfWidth + temp_Cube.x_offset, -halfHeight + temp_Cube.y_offset, -halfDepth + temp_Cube.z_offset},
-        {halfWidth + temp_Cube.x_offset, -halfHeight + temp_Cube.y_offset, -halfDepth + temp_Cube.z_offset},
-        {halfWidth + temp_Cube.x_offset, halfHeight + temp_Cube.y_offset, -halfDepth + temp_Cube.z_offset},
-        {-halfWidth + temp_Cube.x_offset, halfHeight + temp_Cube.y_offset, -halfDepth + temp_Cube.z_offset}};
-
-    struct Face
-    {
-        int indices[4];
-        float distance;
-    };
-
-    Face faces[6] = {
-        {{0, 1, 2, 3}, 0.0f}, // prz�d
-        {{4, 5, 6, 7}, 0.0f}, // ty�
-        {{0, 3, 7, 4}, 0.0f}, // lewo
-        {{1, 2, 6, 5}, 0.0f}, // prawo
-        {{0, 1, 5, 4}, 0.0f}, // d�
-        {{2, 3, 7, 6}, 0.0f}  // g�ra
-    };
-
-    // Oblicz odleg�o�ci �cian od kamery
-    for (int i = 0; i < 6; ++i)
-    {
-        glm::vec3 center(0.0f);
-        for (int j = 0; j < 4; ++j)
-        {
-            center += vertices[faces[i].indices[j]];
-        }
-        center /= 4.0f;
-        faces[i].distance = glm::length(center - cameraPos);
-    }
-
-    // Sortuj �ciany od najdalszej do najbli�szej
-    for (int i = 0; i < 5; ++i)
-    {
-        for (int j = i + 1; j < 6; ++j)
-        {
-            if (faces[i].distance < faces[j].distance)
-            {
-                std::swap(faces[i], faces[j]);
-            }
-        }
-    }
-
-    // transparentne sciany
-    glBegin(GL_QUADS);
-    for (int i = 0; i < 6; ++i)
-    {
-        for (int j = 0; j < 4; ++j)
-        {
-            const glm::vec3 &v = vertices[faces[i].indices[j]];
-            glVertex3f(v.x, v.y, v.z);
-        }
-    }
-    glEnd();
-
-    // KRAW�DZIE (drut)
-    //  glColor4f(0.0f, 0.0f, 0.0f, 1.0f); // czarne, nieprzezroczyste
-    glDisable(GL_DEPTH_TEST);
-    glLineWidth(2.0f);
-
-    static const int edges[12][2] = {
-        {0, 1}, {1, 2}, {2, 3}, {3, 0}, // prz�d
-        {4, 5},
-        {5, 6},
-        {6, 7},
-        {7, 4}, // ty�
-        {0, 4},
-        {1, 5},
-        {2, 6},
-        {3, 7} // ��cz�ce
-    };
-    glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
-    glBegin(GL_LINES);
-    for (int e = 0; e < 12; ++e)
-    {
-        const glm::vec3 &v0 = vertices[edges[e][0]];
-        const glm::vec3 &v1 = vertices[edges[e][1]];
-        glVertex3f(v0.x, v0.y, v0.z);
-        glVertex3f(v1.x, v1.y, v1.z);
-    }
-    glEnd();
-}
-
-
-void buildBuffersFor(const std::vector<node> &verts,
-                     const std::vector<Triangle> &tris,
-                     MeshGL &m,
-                     bool dynamic)
-{
-    // if (!GLAD_GL_VERSION_1_5) { std::cerr << "VBO niedost�pne (GL < 1.5)\n"; return; }
-    m.dynamic = dynamic;
-
-    if (!m.vbo)
-        glGenBuffers(1, &m.vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, m.vbo);
-
-    const GLsizeiptr vbSize = (GLsizeiptr)(verts.size() * sizeof(node));
-    const GLenum usage = dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
-    glBufferData(GL_ARRAY_BUFFER, vbSize, verts.empty() ? nullptr : (const void *)verts.data(), usage);
-
-    if (!m.ibo)
-        glGenBuffers(1, &m.ibo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.ibo);
-
-    const GLsizeiptr ibSize = (GLsizeiptr)(tris.size() * 3 * sizeof(unsigned int));
-    const void *idxSrc = tris.empty() ? nullptr : (const void *)&tris[0].indices[0];
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, ibSize, idxSrc, GL_STATIC_DRAW);
-
-    m.indexCount = (GLsizei)(tris.size() * 3);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-} // bufory
-
-void updatePositionsFor(const std::vector<node> &verts, MeshGL &m)
-{
-    if (!m.vbo)
-        return;
-    glBindBuffer(GL_ARRAY_BUFFER, m.vbo);
-
-    const GLsizeiptr vbSize = (GLsizeiptr)(verts.size() * sizeof(node));
-    glBufferData(GL_ARRAY_BUFFER, vbSize, nullptr, GL_DYNAMIC_DRAW);
-    if (!verts.empty())
-        glBufferSubData(GL_ARRAY_BUFFER, 0, vbSize, (const void *)verts.data());
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-void drawMesh(const MeshGL &m,
-              const glm::vec3 &offset,
-              const glm::vec4 &fill,
-              const glm::vec4 &wire,
-              float wireWidth)
-{
-    if (!m.vbo || !m.ibo || m.indexCount == 0)
-        return;
-
-    glPushMatrix();
-    if (offset.x != 0 || offset.y != 0 || offset.z != 0)
-        glTranslatef(offset.x, offset.y, offset.z);
-
-    glBindBuffer(GL_ARRAY_BUFFER, m.vbo);
-    glEnableClientState(GL_VERTEX_ARRAY); // compat profile
-    glVertexPointer(3, GL_FLOAT, (GLsizei)sizeof(node), (const void *)offsetof(node, position));
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.ibo);
-
-    glEnable(GL_POLYGON_OFFSET_FILL);
-    glPolygonOffset(1.0f, 1.0f);
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glColor4f(fill.r, fill.g, fill.b, fill.a);
-    glDrawElements(GL_TRIANGLES, m.indexCount, GL_UNSIGNED_INT, (void *)0);
-
-    glDisable(GL_POLYGON_OFFSET_FILL);
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glLineWidth(wireWidth);
-    glColor4f(wire.r, wire.g, wire.b, wire.a);
-    glDrawElements(GL_TRIANGLES, m.indexCount, GL_UNSIGNED_INT, (void *)0);
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glPopMatrix();
-}
-
-// Zwraca sfer� wok� (0,0,0) o promieniu 'radius' i g�sto�ci 'subdiv'
-static void buildIcosphereNodesTris(float radius, int subdiv,
-                                    std::vector<node> &out_nodes,
-                                    std::vector<Triangle> &out_tris)
-{
-    // 12 wierzcho�k�w fali
-    const float t = (1.0f + std::sqrt(5.0f)) * 0.5f;
-    std::vector<glm::vec3> verts = {
-        glm::normalize(glm::vec3(-1, t, 0)),
-        glm::normalize(glm::vec3(1, t, 0)),
-        glm::normalize(glm::vec3(-1, -t, 0)),
-        glm::normalize(glm::vec3(1, -t, 0)),
-
-        glm::normalize(glm::vec3(0, -1, t)),
-        glm::normalize(glm::vec3(0, 1, t)),
-        glm::normalize(glm::vec3(0, -1, -t)),
-        glm::normalize(glm::vec3(0, 1, -t)),
-
-        glm::normalize(glm::vec3(t, 0, -1)),
-        glm::normalize(glm::vec3(t, 0, 1)),
-        glm::normalize(glm::vec3(-t, 0, -1)),
-        glm::normalize(glm::vec3(-t, 0, 1)),
-    };
-    for (auto &v : verts)
-        v *= radius;
-
-    std::vector<glm::ivec3> faces = {
-        {0, 11, 5}, {0, 5, 1}, {0, 1, 7}, {0, 7, 10}, {0, 10, 11}, {1, 5, 9}, {5, 11, 4}, {11, 10, 2}, {10, 7, 6}, {7, 1, 8}, {3, 9, 4}, {3, 4, 2}, {3, 2, 6}, {3, 6, 8}, {3, 8, 9}, {4, 9, 5}, {2, 4, 11}, {6, 2, 10}, {8, 6, 7}, {9, 8, 1}};
-
-    // podzialy z krawedzi
-    for (int s = 0; s < subdiv; ++s)
-    {
-        std::unordered_map<uint64_t, int> cache;
-        std::vector<glm::ivec3> new_faces;
-        new_faces.reserve(faces.size() * 4);
-
-        for (const auto &f : faces)
-        {
-            int i0 = f.x, i1 = f.y, i2 = f.z;
-            int a = midpoint_index(i0, i1, verts, cache, radius);
-            int b = midpoint_index(i1, i2, verts, cache, radius);
-            int c = midpoint_index(i2, i0, verts, cache, radius);
-
-            new_faces.push_back({i0, a, c});
-            new_faces.push_back({i1, b, a});
-            new_faces.push_back({i2, c, b});
-            new_faces.push_back({a, b, c});
-        }
-        faces.swap(new_faces);
-    }
-
-    // konwersja
-    out_nodes.clear();
-    out_nodes.reserve(verts.size());
-    for (const auto &p : verts)
-    {
-        node nd;
-        nd.position = p;
-        nd.velocity = glm::vec3(0); // statyczne
-        nd.energy = 0.0f;
-        out_nodes.push_back(nd);
-    }
-
-    out_tris.clear();
-    out_tris.reserve(faces.size());
-    for (const auto &f : faces)
-    {
-        out_tris.push_back({{f.x, f.y, f.z}});
-    }
-}
-
 
 //---------------------
 //--------MAIN---------
@@ -994,7 +607,7 @@ int main()
 
     bool pokazano_dane = false; // testowe, do usuniecia
 
-    GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Symulacja", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(screen_width, screen_height, "Symulacja", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -1037,7 +650,7 @@ int main()
     ImGui_ImplOpenGL3_Init("#version 330");
 
     //waves.push_back(Wave());
-    current_wave = Wave();
+    current_wave.Begin(source, gWinPackets[gWinIdx]);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -1050,7 +663,9 @@ int main()
         glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glfwGetWindowSize(window, &screen_width, &screen_height);
+
+        glm::mat4 projection = glm::perspective(glm::radians(fov), (float)screen_width / (float)screen_height, 0.1f, 100.0f);
         glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
         glMatrixMode(GL_PROJECTION);
@@ -1093,12 +708,12 @@ int main()
         ImGui::InputFloat("Mic_vel y", &Mic.mic_velocity.y, 5.0f, Mic.mic_velocity.y);
         ImGui::InputFloat("Mic_vel z", &Mic.mic_velocity.z, 5.0f, Mic.mic_velocity.z);
         ImGui::Text("Zrodlo");
-        ImGui::InputFloat("Src x", &Source.src_x, 0.1f, Source.src_x);
-        ImGui::InputFloat("Src y", &Source.src_y, 0.1f, Source.src_y);
-        ImGui::InputFloat("Src z", &Source.src_z, 0.1f, Source.src_z);
-        ImGui::InputFloat("Src_vel x", &Source.velocity.x, 5.0f, Source.velocity.x);
-        ImGui::InputFloat("Src_vel y", &Source.velocity.y, 5.0f, Source.velocity.y);
-        ImGui::InputFloat("Src_vel z", &Source.velocity.z, 5.0f, Source.velocity.z);
+        ImGui::InputFloat("Src x", &source.src_x, 0.1f, source.src_x);
+        ImGui::InputFloat("Src y", &source.src_y, 0.1f, source.src_y);
+        ImGui::InputFloat("Src z", &source.src_z, 0.1f, source.src_z);
+        ImGui::InputFloat("Src_vel x", &source.velocity.x, 5.0f, source.velocity.x);
+        ImGui::InputFloat("Src_vel y", &source.velocity.y, 5.0f, source.velocity.y);
+        ImGui::InputFloat("Src_vel z", &source.velocity.z, 5.0f, source.velocity.z);
         ImGui::Text("Basen");
         ImGui::InputFloat("Cube width", &Cube.width, 2.0f, Cube.width);
         ImGui::InputFloat("Cube height", &Cube.height, 2.0f, Cube.height);

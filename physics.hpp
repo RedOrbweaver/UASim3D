@@ -1,108 +1,5 @@
 #pragma once
 
-inline float dist2PointSegment(const glm::vec3 &p,
-                               const glm::vec3 &a,
-                               const glm::vec3 &b)
-{
-    glm::vec3 ab = b - a;
-    float ab2 = glm::dot(ab, ab);
-    if (ab2 < 1e-12f)
-    {
-
-        glm::vec3 d = p - a;
-        return glm::dot(d, d);
-    }
-
-    float t = glm::dot(p - a, ab) / ab2;
-    t = std::clamp(t, 0.0f, 1.0f);
-    glm::vec3 q = a + t * ab;
-    glm::vec3 d = p - q;
-    return glm::dot(d, d);
-}
-
-inline float dist2PointTriangle(const glm::vec3 &p,
-                                const glm::vec3 &a,
-                                const glm::vec3 &b,
-                                const glm::vec3 &c)
-{
-    glm::vec3 ab = b - a;
-    glm::vec3 ac = c - a;
-    glm::vec3 n = glm::cross(ab, ac);
-    float n2 = glm::dot(n, n);
-
-    if (n2 < 1e-12f)
-    {
-        float d2ab = dist2PointSegment(p, a, b);
-        float d2bc = dist2PointSegment(p, b, c);
-        float d2ca = dist2PointSegment(p, c, a);
-        return std::min(d2ab, std::min(d2bc, d2ca));
-    }
-
-    glm::vec3 nNorm = n / std::sqrt(n2);
-    float distPlane = glm::dot(p - a, nNorm);
-    glm::vec3 proj = p - distPlane * nNorm;
-
-    glm::vec3 v0 = ab;
-    glm::vec3 v1 = ac;
-    glm::vec3 v2 = proj - a;
-
-    float d00 = glm::dot(v0, v0);
-    float d01 = glm::dot(v0, v1);
-    float d11 = glm::dot(v1, v1);
-    float d20 = glm::dot(v2, v0);
-    float d21 = glm::dot(v2, v1);
-    float denom = d00 * d11 - d01 * d01;
-
-    float u = -1.f, v = -1.f, w = -1.f;
-    if (std::fabs(denom) > 1e-12f)
-    {
-        v = (d11 * d20 - d01 * d21) / denom;
-        w = (d00 * d21 - d01 * d20) / denom;
-        u = 1.0f - v - w;
-    }
-
-    if (u >= 0.0f && v >= 0.0f && w >= 0.0f)
-    {
-        return distPlane * distPlane;
-    }
-
-    float d2ab = dist2PointSegment(p, a, b);
-    float d2bc = dist2PointSegment(p, b, c);
-    float d2ca = dist2PointSegment(p, c, a);
-    return std::min(d2ab, std::min(d2bc, d2ca));
-}
-
-inline float q5(float t)
-{
-    // double w srodku zmniejsza blad
-    double buf = 1 / dt;
-    return (float)(std::llround((double)t * buf) / buf);
-}
-
-inline float q5_inter(float t)
-{
-    // double w srodku zmniejsza blad
-    double buf = 1 / inv_fp;
-    return (float)(std::llround((double)t * buf) / buf);
-}
-
-inline float computeAvgEdgeLen(const std::vector<glm::vec3> &V,
-                               const std::vector<glm::ivec3> &F)
-{
-    double sum = 0;
-    size_t cnt = 0;
-    for (auto &t : F)
-    {
-        const auto &a = V[t.x], &b = V[t.y], &c = V[t.z];
-        sum += glm::length(a - b);
-        ++cnt;
-        sum += glm::length(b - c);
-        ++cnt;
-        sum += glm::length(c - a);
-        ++cnt;
-    }
-    return cnt ? float(sum / cnt) : 0.0f;
-}
 
 // interpolacja liniowa  logMicHit na krok dt + kwantyzacja q5
 inline float flush_echo_interpolated(Microphone& Mic, const std::vector<std::pair<float, float>> &buf,
@@ -268,7 +165,7 @@ inline bool touchesMicrophone(Microphone& Mic, Wave& wave, int nodeIndex)
 
     // if (dist2 <= r2) return true;
 
-    float maxExtra = gAvgEdgeLen * 1.5f;
+    float maxExtra = wave.gAvgEdgeLen * 1.5f;
     float farR2 = (maxExtra) * (maxExtra);
     if (dist2 > farR2)
     {
@@ -306,7 +203,7 @@ inline bool touchesMicrophonePoint(Microphone& Mic, Wave& wave, int nodeIndex)
     const glm::vec3 center(Mic.mic_x, Mic.mic_y, Mic.mic_z);
     const glm::vec3 &pNode = wave.nodes[nodeIndex].position;
 
-    float maxExtra = gAvgEdgeLen * 1.5f;
+    float maxExtra = wave.gAvgEdgeLen * 1.5f;
     float farR2 = 1440 * dt * 10;
     float buf = glm::length(pNode - center);
     if (buf > farR2)
@@ -422,7 +319,7 @@ inline void retime_echo(std::vector<std::pair<float, float>> &buf, float newEnd,
     }
 }
 
-inline void updatePhysics(float dt, float& window_ms, float& time_passed, Wave& wave, source& Source, Microphone& Mic, struct Cuboid_dimensions Pool, struct Cuboid_dimensions temp_Obstacle) // glowna petla fizyki programu
+inline void updatePhysics(float dt, float& window_ms, float& time_passed, Wave& wave, SoundSource& source, Microphone& Mic, struct Cuboid_dimensions Pool, struct Cuboid_dimensions temp_Obstacle) // glowna petla fizyki programu
 {
     const float Pool_halfW = 0.5f * Pool.width;
     const float Pool_halfH = 0.5f * Pool.height;
@@ -532,9 +429,9 @@ inline void updatePhysics(float dt, float& window_ms, float& time_passed, Wave& 
     Mic.mic_y += Mic.mic_velocity.y * dt;
     Mic.mic_z += Mic.mic_velocity.z * dt;
 
-    Source.src_x += Source.velocity.x * dt;
-    Source.src_y += Source.velocity.y * dt;
-    Source.src_z += Source.velocity.z * dt;
+    source.src_x += source.velocity.x * dt;
+    source.src_y += source.velocity.y * dt;
+    source.src_z += source.velocity.z * dt;
 
     // Odbicia mikrofonu od �cian basenu
     bounce1D(Mic.mic_x, Mic.mic_velocity.x, -Pool_halfW + Pool.x_offset + micR, Pool_halfW + Pool.x_offset - micR);
@@ -542,9 +439,9 @@ inline void updatePhysics(float dt, float& window_ms, float& time_passed, Wave& 
     bounce1D(Mic.mic_z, Mic.mic_velocity.z, -Pool_halfD + Pool.z_offset + micR, Pool_halfD + Pool.z_offset - micR);
 
     // odbicia zrodla od scian
-    bounce1D(Source.src_x, Source.velocity.x, -Pool_halfW + Pool.x_offset, Pool_halfW + Pool.x_offset);
-    bounce1D(Source.src_y, Source.velocity.y, -Pool_halfH + Pool.y_offset, Pool_halfH + Pool.y_offset);
-    bounce1D(Source.src_z, Source.velocity.z, -Pool_halfD + Pool.z_offset, Pool_halfD + Pool.z_offset);
+    bounce1D(source.src_x, source.velocity.x, -Pool_halfW + Pool.x_offset, Pool_halfW + Pool.x_offset);
+    bounce1D(source.src_y, source.velocity.y, -Pool_halfH + Pool.y_offset, Pool_halfH + Pool.y_offset);
+    bounce1D(source.src_z, source.velocity.z, -Pool_halfD + Pool.z_offset, Pool_halfD + Pool.z_offset);
 
     // odbicia od przeszkody (MIKROFON)
     // bounceObstacleMic(Mic, temp_Obstacle);
@@ -736,11 +633,11 @@ inline void updatePhysics(float dt, float& window_ms, float& time_passed, Wave& 
                     // if (s_j <= 0.0f) continue;
 
                     // Zbli�ony przewidywany czas doj�cia
-                    if (std::fabs(s_j - s_i) > 1.5f * gBlindRadius)
+                    if (std::fabs(s_j - s_i) > 1.5f * wave.gBlindRadius)
                         continue;
 
                     // Blisko w przestrzeni (ok. �3 tr�jk�ty�)
-                    if (glm::length(wave.nodes[j].position - center) > gBlindRadius)
+                    if (glm::length(wave.nodes[j].position - center) > wave.gBlindRadius)
                         continue;
 
                     
@@ -767,8 +664,8 @@ inline void updatePhysics(float dt, float& window_ms, float& time_passed, Wave& 
     {
         Mic.rewind_point = glm::vec3(Mic.mic_x, Mic.mic_y, Mic.mic_z);
         Mic.rewind_vel = Mic.mic_velocity;
-        Source.rewind_point = glm::vec3(Source.src_x, Source.src_y, Source.src_z);
-        Source.rewind_vel = Source.velocity;
+        source.rewind_point = glm::vec3(source.src_x, source.src_y, source.src_z);
+        source.rewind_vel = source.velocity;
         rewind_punkt = false;
     }
 

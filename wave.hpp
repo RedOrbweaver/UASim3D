@@ -15,6 +15,10 @@ class Wave
     std::unordered_map<uint64_t, int> gEdgeMidCache; // edge -> midpoint
     bool mesh_dirty = true;
 
+    float gAvgEdgeLen = 0.0f;                     // siatka
+    int gBlindRings = 9 * 3 * 9 * 27 * 9 * 9 * 9; // 3 tr�jk�ty
+    float gBlindRadius = 0.0f;                    // = gBlindRings * gAvgEdgeLen
+
     protected:
     size_t gRefineCursor = 0;
 
@@ -347,5 +351,103 @@ class Wave
         gEdgeMidCache.clear();
         mesh_dirty = true;
     }
+    void Begin(const SoundSource& source, WindowPacket& packet, float radius = INITIAL_WAVE_RADIUS)
+    {
+                // gestosc - ka�dy poziom �4 liczba tr�jk�t�w
+        constexpr int SUBDIV = 2; // 2 optymalnie, wiecej laguje
+        // 12 wierzcho�k�w  na sferze o promieniu 'radius'
+        const float t = (1.0f + std::sqrt(5.0f)) * 0.5f; // z�ota proporcja
+        std::vector<glm::vec3> verts = {
+            glm::normalize(glm::vec3(-1, t, 0)),
+            glm::normalize(glm::vec3(1, t, 0)),
+            glm::normalize(glm::vec3(-1, -t, 0)),
+            glm::normalize(glm::vec3(1, -t, 0)),
 
+            glm::normalize(glm::vec3(0, -1, t)),
+            glm::normalize(glm::vec3(0, 1, t)),
+            glm::normalize(glm::vec3(0, -1, -t)),
+            glm::normalize(glm::vec3(0, 1, -t)),
+
+            glm::normalize(glm::vec3(t, 0, -1)),
+            glm::normalize(glm::vec3(t, 0, 1)),
+            glm::normalize(glm::vec3(-t, 0, -1)),
+            glm::normalize(glm::vec3(-t, 0, 1)),
+        };
+        for (auto &v : verts)
+            v *= radius; // na promie� 'radius'
+
+        // 20 �cian
+        std::vector<glm::ivec3> faces = {
+            {0, 11, 5}, {0, 5, 1}, {0, 1, 7}, {0, 7, 10}, {0, 10, 11}, {1, 5, 9}, {5, 11, 4}, {11, 10, 2}, {10, 7, 6}, {7, 1, 8}, {3, 9, 4}, {3, 4, 2}, {3, 2, 6}, {3, 6, 8}, {3, 8, 9}, {4, 9, 5}, {2, 4, 11}, {6, 2, 10}, {8, 6, 7}, {9, 8, 1}};
+        /*
+        std::vector<glm::ivec3> faces = {
+            {0,11,5}, {0,5,1}, {0,1,7}, {0,7,10}, {0,10,11},
+            {1,5,9},  {5,11,4}, {11,10,2}, {10,7,6}, {7,1,8},
+            {3,9,4},  {3,4,2},  {3,2,6},  {3,6,8},  {3,8,9},
+            {4,9,5},  {2,4,11}, {6,2,10}
+        };*/
+
+        // Podzial
+        for (int s = 0; s < SUBDIV; ++s)
+        {
+            std::unordered_map<uint64_t, int> cache;
+            std::vector<glm::ivec3> new_faces;
+            new_faces.reserve(faces.size() * 4);
+
+            for (const auto &f : faces)
+            {
+                int i0 = f.x, i1 = f.y, i2 = f.z;
+
+                int a = midpoint_index(i0, i1, verts, cache, radius);
+                int b = midpoint_index(i1, i2, verts, cache, radius);
+                int c = midpoint_index(i2, i0, verts, cache, radius);
+
+                // 4 nowe tr�jk�ty
+                new_faces.push_back({i0, a, c});
+                new_faces.push_back({i1, b, a});
+                new_faces.push_back({i2, c, b});
+                new_faces.push_back({a, b, c});
+            }
+            faces.swap(new_faces);
+        }
+
+        nodes.reserve(verts.size());
+        glm::vec3 buf2 = glm::vec3(source.src_x, source.src_y, source.src_z);
+        glm::vec3 gSourceVel = source.velocity;
+        int i = 0;
+        for (const auto &p : verts)
+        {
+            node nd;
+            nd.position = p;
+            // nd.nEmit = glm::normalize(p);
+            nd.velocity = glm::normalize(p) * SOUND_V; // sta�a pr�dko�� fali w wodzie
+
+            nd.position += buf2;
+            nd.doppler = glm::length(nd.velocity) + glm::length(source.velocity);
+            // nd.srcVel = gSourceVel;
+            // nd.energy = audioE;
+            // nd.tEmit = (gWinIdx)*gAudio.window_ms / 1000.0f; // zapisz czas emisji (sim-time)
+            // nd.tEmit = (gWinIdx)*window_ms / 1000.0f;
+
+            nd.energy = packet.amplitude; // amplituda okna
+            nd.tEmit = packet.tEmit;      // czas emisji okna (sek)
+            // nd.winId = (int)gWinIdx;
+            nd.seedId = i++;
+
+            nodes.push_back(nd);
+        }
+
+        triangles.reserve(faces.size());
+        for (const auto &f : faces)
+        {
+            triangles.push_back({{f.x, f.y, f.z}});
+            // break;
+        }
+        gAvgEdgeLen = computeAvgEdgeLen(verts, faces);
+        gBlindRadius = gBlindRings * gAvgEdgeLen;
+    }
+    Wave()
+    {
+
+    }
 };

@@ -23,6 +23,7 @@
 #include "libraries/imgui-master/imgui_impl_opengl3_loader.h"
 
 #include "datatypes.hpp"
+#include "constants.hpp"
 #include "globals.hpp"
 #include "geometry.hpp"
 #include "wave.hpp"

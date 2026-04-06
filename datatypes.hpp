@@ -37,7 +37,7 @@ struct node
     float doppler = 1.0f;
 };
 
-struct source
+struct SoundSource
 {
     float src_x = 0;
     float src_y = 0;
