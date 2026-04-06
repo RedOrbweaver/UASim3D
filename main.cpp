@@ -448,6 +448,91 @@ void StepSimulation(Wave& wave)
     updatePhysics(dt, window_ms, time_passed, wave, source, Mic, Cube, Obstacle);
 }
 
+void DrawGUI()
+{
+    //---IMGUI---
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    ImGui::SetWindowSize(ImVec2(200, 200));
+
+    ImGui::Begin("Start/Stop");
+    if (ImGui::Button("Start"))
+    {
+        simulate = true;
+    }
+    if (ImGui::Button("Stop"))
+    {
+        simulate = false;
+    }
+    ImGui::End();
+
+    ImGui::Begin("Parametry");
+    ImGui::Text("Mikrofon");
+    ImGui::InputFloat("Mic x", &Mic.mic_x, 0.1f, Mic.mic_x);
+    ImGui::InputFloat("Mic y", &Mic.mic_y, 0.1f, Mic.mic_y);
+    ImGui::InputFloat("Mic z", &Mic.mic_z, 0.1f, Mic.mic_z);
+    ImGui::InputFloat("Mic_vel x", &Mic.mic_velocity.x, 5.0f, Mic.mic_velocity.x);
+    ImGui::InputFloat("Mic_vel y", &Mic.mic_velocity.y, 5.0f, Mic.mic_velocity.y);
+    ImGui::InputFloat("Mic_vel z", &Mic.mic_velocity.z, 5.0f, Mic.mic_velocity.z);
+    ImGui::Text("Zrodlo");
+    ImGui::InputFloat("Src x", &source.src_x, 0.1f, source.src_x);
+    ImGui::InputFloat("Src y", &source.src_y, 0.1f, source.src_y);
+    ImGui::InputFloat("Src z", &source.src_z, 0.1f, source.src_z);
+    ImGui::InputFloat("Src_vel x", &source.velocity.x, 5.0f, source.velocity.x);
+    ImGui::InputFloat("Src_vel y", &source.velocity.y, 5.0f, source.velocity.y);
+    ImGui::InputFloat("Src_vel z", &source.velocity.z, 5.0f, source.velocity.z);
+    ImGui::Text("Basen");
+    ImGui::InputFloat("Cube width", &Cube.width, 2.0f, Cube.width);
+    ImGui::InputFloat("Cube height", &Cube.height, 2.0f, Cube.height);
+    ImGui::InputFloat("Cube depth", &Cube.depth, 2.0f, Cube.depth);
+    ImGui::InputFloat("Cube x_offset", &Cube.x_offset, 2.0f, Cube.x_offset);
+    ImGui::InputFloat("Cube y_offset", &Cube.y_offset, 2.0f, Cube.y_offset);
+    ImGui::InputFloat("Cube z_offset", &Cube.z_offset, 2.0f, Cube.z_offset);
+    ImGui::End();
+
+    auto avg = [](double* buf, int len)
+    {
+        double sum = 0;
+        for(int i = 0; i < len; i++)
+            sum += buf[i];
+        return sum / (double)len;
+    };
+
+    ImGui::Begin("Performance");
+
+    ImGui::Text("Last frame time: %f", last_frame_time);
+    ImGui::Text("Last render time: %f", last_render_time);
+    ImGui::Text("Last physics time: %f", last_physics_time);
+    ImGui::Text("Vertices/s: %f", last_vertices_per_second);
+
+    ImGui::Text("render avg (%i): %f", RENDER_TIMES_KEPT, avg(render_times, RENDER_TIMES_KEPT));
+    ImGui::Text("physics avg (%i): %f", PHYSICS_TIMES_KEPT, avg(physics_times, PHYSICS_TIMES_KEPT));
+    double vavg = avg(vertex_times, VERTICES_PER_SEC_KEPT);
+    ImGui::Text("vertices/s avg: (%i): %f", VERTICES_PER_SEC_KEPT, vavg);
+
+    if(vertices_per_sec_avg_max < vavg)
+        vertices_per_sec_avg_max = vavg;
+
+    ImGui::Text("MAX vertices/s avg: (%i): %f", VERTICES_PER_SEC_KEPT, vertices_per_sec_avg_max);
+
+    ImGui::Text("Vertices: %i", current_wave.nodes.size());
+
+    ImGui::End();
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+double PushTime(clock_t rawtm, double* buffer, int buffer_len, int& buffer_index, double multiplier = 1.0f)
+{
+    double tm = (((double)rawtm) / (double)CLOCKS_PER_SEC) * multiplier;
+
+    buffer[buffer_index] = tm;
+    buffer_index = (buffer_index + 1) % buffer_len;
+    return tm;
+}
+
 //---------------------
 //--------MAIN---------
 //---------------------
@@ -505,6 +590,7 @@ int main()
 
     while (!glfwWindowShouldClose(window))
     {
+        clock_t frame_start = clock();
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
@@ -575,58 +661,33 @@ int main()
         }
         if (simulate)
         {
+            clock_t sim_start = clock();
             StepSimulation(current_wave);
+            clock_t sim_tm = clock() - sim_start;
+            last_physics_time = PushTime(sim_tm, physics_times, PHYSICS_TIMES_KEPT, physics_times_index);
+            total_physics_time += last_physics_time;
+
+            last_vertices_per_second = vertex_times[vertex_times_index] = (double)current_wave.nodes.size() / last_physics_time;
+            vertex_times_index = (vertex_times_index+1) % VERTICES_PER_SEC_KEPT;
         }
+
+        
+        clock_t render_start = clock();
         RenderWave(current_wave, Mic, source, cameraPos, gWaveGL, gMicGL, gSrcGL, Cube, Obstacle);
+        clock_t render_tm = clock() - render_start;
+        last_render_time = PushTime(render_tm, render_times, RENDER_TIMES_KEPT, render_times_index);
+        total_render_time += last_render_time;
+
+
 
         glfwPollEvents();
 
-        //---IMGUI---
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-        ImGui::SetWindowSize(ImVec2(200, 200));
-
-        ImGui::Begin("Start/Stop");
-        if (ImGui::Button("Start"))
-        {
-            simulate = true;
-        }
-        if (ImGui::Button("Stop"))
-        {
-            simulate = false;
-        }
-        ImGui::End();
-
-        ImGui::Begin("Parametry");
-        ImGui::Text("Mikrofon");
-        ImGui::InputFloat("Mic x", &Mic.mic_x, 0.1f, Mic.mic_x);
-        ImGui::InputFloat("Mic y", &Mic.mic_y, 0.1f, Mic.mic_y);
-        ImGui::InputFloat("Mic z", &Mic.mic_z, 0.1f, Mic.mic_z);
-        ImGui::InputFloat("Mic_vel x", &Mic.mic_velocity.x, 5.0f, Mic.mic_velocity.x);
-        ImGui::InputFloat("Mic_vel y", &Mic.mic_velocity.y, 5.0f, Mic.mic_velocity.y);
-        ImGui::InputFloat("Mic_vel z", &Mic.mic_velocity.z, 5.0f, Mic.mic_velocity.z);
-        ImGui::Text("Zrodlo");
-        ImGui::InputFloat("Src x", &source.src_x, 0.1f, source.src_x);
-        ImGui::InputFloat("Src y", &source.src_y, 0.1f, source.src_y);
-        ImGui::InputFloat("Src z", &source.src_z, 0.1f, source.src_z);
-        ImGui::InputFloat("Src_vel x", &source.velocity.x, 5.0f, source.velocity.x);
-        ImGui::InputFloat("Src_vel y", &source.velocity.y, 5.0f, source.velocity.y);
-        ImGui::InputFloat("Src_vel z", &source.velocity.z, 5.0f, source.velocity.z);
-        ImGui::Text("Basen");
-        ImGui::InputFloat("Cube width", &Cube.width, 2.0f, Cube.width);
-        ImGui::InputFloat("Cube height", &Cube.height, 2.0f, Cube.height);
-        ImGui::InputFloat("Cube depth", &Cube.depth, 2.0f, Cube.depth);
-        ImGui::InputFloat("Cube x_offset", &Cube.x_offset, 2.0f, Cube.x_offset);
-        ImGui::InputFloat("Cube y_offset", &Cube.y_offset, 2.0f, Cube.y_offset);
-        ImGui::InputFloat("Cube z_offset", &Cube.z_offset, 2.0f, Cube.z_offset);
-        ImGui::End();
-
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        //---Koniec IMGUI----
+        DrawGUI();
 
         glfwSwapBuffers(window);
+
+        clock_t frame_tm = clock() - frame_start;
+        last_frame_time = (double)frame_tm / (double)CLOCKS_PER_SEC;
     }
 
     ImGui_ImplOpenGL3_Shutdown();
