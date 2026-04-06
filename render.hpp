@@ -92,7 +92,7 @@ inline void updatePositionsFor(const std::vector<node> &verts, MeshGL &m)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-inline void drawCuboidTransparentSorted(glm::vec3 cameraPos, Cuboid_dimensions& temp_Cube)
+inline void drawCuboidTransparentSorted(glm::vec3 cameraPos, const Cuboid_dimensions& temp_Cube)
 {
     float halfWidth = temp_Cube.width / 2.0f;
     float halfHeight = temp_Cube.height / 2.0f;
@@ -186,3 +186,105 @@ inline void drawCuboidTransparentSorted(glm::vec3 cameraPos, Cuboid_dimensions& 
     }
     glEnd();
 }
+
+inline void drawMesh(const MeshGL &m, const glm::vec3 &offset = glm::vec3(0), 
+    const glm::vec4 &fill = glm::vec4(1.0f, 0.5f, 0.0f, 1.0f), 
+    const glm::vec4 &wire = glm::vec4(0.0f, 0.0f, 0.0f, 0.6f), 
+    float wireWidth = 0.2f)
+{
+    if (!m.vbo || !m.ibo || m.indexCount == 0)
+        return;
+
+    glPushMatrix();
+    if (offset.x != 0 || offset.y != 0 || offset.z != 0)
+        glTranslatef(offset.x, offset.y, offset.z);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m.vbo);
+    glEnableClientState(GL_VERTEX_ARRAY); // compat profile
+    glVertexPointer(3, GL_FLOAT, (GLsizei)sizeof(node), (const void *)offsetof(node, position));
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.ibo);
+
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(1.0f, 1.0f);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glColor4f(fill.r, fill.g, fill.b, fill.a);
+    glDrawElements(GL_TRIANGLES, m.indexCount, GL_UNSIGNED_INT, (void *)0);
+
+    glDisable(GL_POLYGON_OFFSET_FILL);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glLineWidth(wireWidth);
+    glColor4f(wire.r, wire.g, wire.b, wire.a);
+    glDrawElements(GL_TRIANGLES, m.indexCount, GL_UNSIGNED_INT, (void *)0);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glPopMatrix();
+}
+
+inline void RenderWave(Wave& wave, Microphone& Mic, SoundSource& source, 
+    glm::vec3 cameraPos, 
+    MeshGL& gWaveGL, MeshGL& gMicGL, MeshGL& gSrcGL, 
+    const Cuboid_dimensions& Cube, const Cuboid_dimensions& Obstacle)
+{
+    static int frameCount = 0;
+    if ((frameCount % 8) == 0)
+    {
+        size_t budget = std::min<size_t>(4000, std::max<size_t>(1, wave.triangles.size() / 10));
+        budget = wave.triangles.size(); // TO DO: MOZNA ZMIENIC NA WIEKSZE (W SENSIE ZMIENIC np. 4 -> 2)
+        int threads = std::max(1u, std::thread::hardware_concurrency());
+
+        wave.refineIcosahedron_chunked_mt(0.05f, budget, Cube, threads);
+    }
+    frameCount++;
+
+
+    // odbuduj bufory tylko gdy trzeba
+    if (wave.mesh_dirty)
+    {
+        // buildSphereBuffers(/*dynamic=*/true);
+        buildBuffersFor(wave.nodes, wave.triangles, gWaveGL, /*dynamic=*/true);
+        wave.mesh_dirty = false;
+    }
+    else
+    {
+        // w przeciwnym razie tylko podmie� pozycje
+        // updateSpherePositions();
+        updatePositionsFor(wave.nodes, gWaveGL);
+        updatePositionsFor(Mic.verts, gMicGL);
+        updatePositionsFor(source.verts, gSrcGL);
+    }
+
+    // 3) rysuj TYLKO z VBO/IBO
+    // drawSphereWithBuffers();
+
+    // kulka
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_DEPTH_TEST);
+    // drawSphereWithBuffers();
+    // glEnable(GL_DEPTH_TEST);
+    //  FALA (bez offsetu � pozycje absolutne)
+    drawMesh(gWaveGL);
+
+    glEnable(GL_DEPTH_TEST);
+    glm::vec3 micOffset = glm::vec3(Mic.mic_x, Mic.mic_y, Mic.mic_z);
+    drawMesh(gMicGL, micOffset, /*fill*/ {1.0f, 0.4f, 0.8f, 0.5f});
+    glm::vec3 srcOffset = glm::vec3(source.src_x, source.src_y, source.src_z);
+    drawMesh(gSrcGL, srcOffset, /*fill*/ {1.0f, 1.0f, 1.0f, 0.5f});
+    // drawMicrophone();
+    // drawSource();
+    // PRZESZKODA
+
+    glColor4f(0.2f, 0.5f, 0.2f, 0.7f);
+    drawCuboidTransparentSorted(cameraPos, Obstacle);
+    // glEnable(GL_DEPTH_TEST);
+    //  Basen
+    // glDisable(GL_DEPTH_TEST);
+    glColor4f(0.0f, 0.0f, 1.0f, 0.1f);
+    drawCuboidTransparentSorted(cameraPos, Cube);
+} // do wyswietlania symulacji
