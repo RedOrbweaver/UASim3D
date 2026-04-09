@@ -17,6 +17,8 @@
 #include <iomanip>
 #include <sstream>
 #include <cctype>
+
+#define IMGUI_IMPL_GLFW_DISABLE_X11 1
 #include "imgui/imgui.h"
 #include "imgui/backends/imgui_impl_glfw.h"
 #include "imgui/backends/imgui_impl_opengl3.h"
