@@ -678,7 +678,17 @@ int main()
 
         
         clock_t render_start = clock();
-        RenderWave(current_wave, Mic, source, cameraPos, gWaveGL, gMicGL, gSrcGL, Cube, Obstacle);
+        
+        RenderWave(current_wave, cameraPos, gWaveGL, Cube);
+
+        RenderPool(cameraPos, Cube);
+
+        updatePositionsFor(Mic.verts, gMicGL);
+        RenderMicrophone(Mic, gMicGL);
+
+        RenderSource(source, gSrcGL);
+        updatePositionsFor(source.verts, gSrcGL);
+
         clock_t render_tm = clock() - render_start;
         last_render_time = PushTime(render_tm, render_times, RENDER_TIMES_KEPT, render_times_index);
         total_render_time += last_render_time;

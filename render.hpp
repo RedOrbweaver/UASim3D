@@ -226,10 +226,32 @@ inline void drawMesh(const MeshGL &m, const glm::vec3 &offset = glm::vec3(0),
     glPopMatrix();
 }
 
-inline void RenderWave(Wave& wave, Microphone& Mic, SoundSource& source, 
-    glm::vec3 cameraPos, 
-    MeshGL& gWaveGL, MeshGL& gMicGL, MeshGL& gSrcGL, 
-    const Cuboid_dimensions& Cube, const Cuboid_dimensions& Obstacle)
+inline void RenderSource(SoundSource& source, MeshGL& gSrcGL)
+{
+    glEnable(GL_DEPTH_TEST);
+    glm::vec3 srcOffset = glm::vec3(source.src_x, source.src_y, source.src_z);
+    drawMesh(gSrcGL, srcOffset, /*fill*/ {1.0f, 1.0f, 1.0f, 0.5f});
+}
+
+inline void RenderMicrophone(Microphone& Mic, MeshGL& gMicGL)
+{
+    glEnable(GL_DEPTH_TEST);
+    glm::vec3 micOffset = glm::vec3(Mic.mic_x, Mic.mic_y, Mic.mic_z);
+    drawMesh(gMicGL, micOffset, /*fill*/ {1.0f, 0.4f, 0.8f, 0.5f});
+}
+inline void RenderPool(glm::vec3 cameraPos, const Cuboid_dimensions& Cube )
+{
+    //glColor4f(0.2f, 0.5f, 0.2f, 0.7f);
+    //drawCuboidTransparentSorted(cameraPos, Obstacle);
+     glEnable(GL_DEPTH_TEST);
+    //  Basen
+    // glDisable(GL_DEPTH_TEST);
+    glColor4f(0.0f, 0.0f, 1.0f, 0.1f);
+    drawCuboidTransparentSorted(cameraPos, Cube);
+}
+
+inline void RenderWave(Wave& wave, glm::vec3 cameraPos, 
+    MeshGL& gWaveGL, const Cuboid_dimensions& Cube)
 {
     static int frameCount = 0;
     if ((frameCount % 8) == 0)
@@ -252,39 +274,14 @@ inline void RenderWave(Wave& wave, Microphone& Mic, SoundSource& source,
     }
     else
     {
-        // w przeciwnym razie tylko podmie� pozycje
-        // updateSpherePositions();
+        // To nie powinno zawsze być wzywane?
         updatePositionsFor(wave.nodes, gWaveGL);
-        updatePositionsFor(Mic.verts, gMicGL);
-        updatePositionsFor(source.verts, gSrcGL);
     }
-
-    // 3) rysuj TYLKO z VBO/IBO
-    // drawSphereWithBuffers();
 
     // kulka
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_DEPTH_TEST);
-    // drawSphereWithBuffers();
-    // glEnable(GL_DEPTH_TEST);
-    //  FALA (bez offsetu � pozycje absolutne)
     drawMesh(gWaveGL);
 
-    glEnable(GL_DEPTH_TEST);
-    glm::vec3 micOffset = glm::vec3(Mic.mic_x, Mic.mic_y, Mic.mic_z);
-    drawMesh(gMicGL, micOffset, /*fill*/ {1.0f, 0.4f, 0.8f, 0.5f});
-    glm::vec3 srcOffset = glm::vec3(source.src_x, source.src_y, source.src_z);
-    drawMesh(gSrcGL, srcOffset, /*fill*/ {1.0f, 1.0f, 1.0f, 0.5f});
-    // drawMicrophone();
-    // drawSource();
-    // PRZESZKODA
-
-    glColor4f(0.2f, 0.5f, 0.2f, 0.7f);
-    drawCuboidTransparentSorted(cameraPos, Obstacle);
-    // glEnable(GL_DEPTH_TEST);
-    //  Basen
-    // glDisable(GL_DEPTH_TEST);
-    glColor4f(0.0f, 0.0f, 1.0f, 0.1f);
-    drawCuboidTransparentSorted(cameraPos, Cube);
-} // do wyswietlania symulacji
+}
