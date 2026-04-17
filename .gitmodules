@@ -1,3 +1,6 @@
 [submodule "imgui"]
 	path = imgui
 	url = https://github.com/ocornut/imgui
+[submodule "UASimLib"]
+	path = UASimLib
+	url = https://github.com/RedOrbweaver/UASimLib
