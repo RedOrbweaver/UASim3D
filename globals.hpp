@@ -31,3 +31,5 @@ inline int vertex_times_index = 0;
 inline double vertex_times[VERTICES_PER_SEC_KEPT];
 
 inline double vertices_per_sec_avg_max = 0;
+
+inline int steps_per_frame = 1;

@@ -17,7 +17,8 @@
                 "kind": "test",
                 "isDefault": true
             },
-            "command": "make"
+            "command": "make",
+            "args": ["-I-"],
         }
     ]
 }

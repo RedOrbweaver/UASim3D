@@ -198,10 +198,13 @@ bool loadCsvSimple(const std::string &path,
     y.clear();
     winMean.clear();
 
-    std::ifstream f(path);
+    std::ifstream f;
+    f.open(path, std::ios::in);
     if (!f)
+    {
+        Red::Failure("Failed to open file " + path + " -> error: " + strerror(errno));
         return false;
-
+    }
     std::string line;
     if (hasHeader)
         std::getline(f, line);
@@ -221,7 +224,10 @@ bool loadCsvSimple(const std::string &path,
         y.push_back((float)v);
     }
     if (tSec.empty())
+    {
+        f.close();
         return false;
+    }
 
     // Stale 5 ms
     const double win_s = window_ms / 1000; // 5 ms w sekundach
@@ -263,6 +269,7 @@ bool loadCsvSimple(const std::string &path,
         gWinPackets[k].amplitude = maxAbs[k]; // max(y)
         winMean[k] = maxAbs[k];
     }
+    f.close();
     return true;
 }
 
@@ -502,6 +509,9 @@ void DrawGUI()
 
     ImGui::Begin("Performance");
 
+    ImGui::Text("FPS (%i): %f", RENDER_TIMES_KEPT, 1.0/last_frame_time);
+    ImGui::InputInt("Steps per frame", &steps_per_frame, 1, 5);
+
     ImGui::Text("Time passed: %f", time_passed);
 
     ImGui::Text("Last frame time: %f", last_frame_time);
@@ -555,10 +565,12 @@ int main()
     }
     glfwMakeContextCurrent(window);
 
+    printf("Current path: %s\n", std::filesystem::current_path().c_str());
+
     // Wczytaj plik csv (ze sciezki wyzej)
     if (!loadCsvSimple(file, ',', /*hasHeader=*/true))
     {
-        std::cerr << "CSV: nie wczytano �adnych danych\n";
+        Red::Failure("CSV: nie wczytano �adnych danych\n");
     }
     else
     {
@@ -606,8 +618,7 @@ int main()
         glMatrixMode(GL_MODELVIEW);
         glLoadMatrixf(&view[0][0]);
 
-        // Oblicz FPS
-        // calculateFPS();
+
         if (first && !rewind_punkt)
         {
             // glfwSetTime(0.0);  // wyzeruj stoper
@@ -656,31 +667,37 @@ int main()
         }
         if (simulate)
         {
-            clock_t sim_start = clock();
-            StepSimulation(current_wave);
-            clock_t sim_tm = clock() - sim_start;
-            last_physics_time = PushTime(sim_tm, physics_times, PHYSICS_TIMES_KEPT, physics_times_index);
-            total_physics_time += last_physics_time;
-
-            last_vertices_per_second = vertex_times[vertex_times_index] = (double)current_wave->nodes.size() / last_physics_time;
-            vertex_times_index = (vertex_times_index+1) % VERTICES_PER_SEC_KEPT;
-
-            time_passed += dt;
-
-            if (time_passed / dt >= (window_ms / 1000.0f) / dt && rewind_punkt)
+            clock_t total_tm = 0;
+            int total_vertices = 0;
+            for(int i = 0; i < steps_per_frame; i++)
             {
-                Mic.rewind_point = glm::vec3(Mic.mic_x, Mic.mic_y, Mic.mic_z);
-                Mic.rewind_vel = Mic.mic_velocity;
-                source.rewind_point = glm::vec3(source.src_x, source.src_y, source.src_z);
-                source.rewind_vel = source.velocity;
-                rewind_punkt = false;
+                total_vertices += vertex_times[vertex_times_index] = (double)current_wave->nodes.size();
+                clock_t sim_start = clock();
+                StepSimulation(current_wave);
+                clock_t sim_tm = clock() - sim_start;
+                total_tm += sim_tm;
+
+                time_passed += dt;
+
+                if (time_passed / dt >= (window_ms / 1000.0f) / dt && rewind_punkt)
+                {
+                    Mic.rewind_point = glm::vec3(Mic.mic_x, Mic.mic_y, Mic.mic_z);
+                    Mic.rewind_vel = Mic.mic_velocity;
+                    source.rewind_point = glm::vec3(source.src_x, source.src_y, source.src_z);
+                    source.rewind_vel = source.velocity;
+                    rewind_punkt = false;
+                }
             }
+            last_physics_time = PushTime(total_tm, physics_times, PHYSICS_TIMES_KEPT, physics_times_index);
+            total_physics_time += last_physics_time;
+            last_vertices_per_second = total_vertices / last_physics_time;
+            vertex_times_index = (vertex_times_index+1) % VERTICES_PER_SEC_KEPT;
         }
 
         
         clock_t render_start = clock();
-        
-        RenderWave(current_wave, cameraPos, gWaveGL, Cube);
+        if(simulate || time_passed > 0.0001f)
+            RenderWave(current_wave, cameraPos, gWaveGL, Cube);
 
         RenderPool(cameraPos, Cube);
 

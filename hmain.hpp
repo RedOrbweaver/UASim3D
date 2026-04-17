@@ -18,12 +18,17 @@
 #include <sstream>
 #include <cctype>
 #include <memory>
+#include <filesystem>
 
 #define IMGUI_IMPL_GLFW_DISABLE_X11 1
 #include "imgui/imgui.h"
 #include "imgui/backends/imgui_impl_glfw.h"
 #include "imgui/backends/imgui_impl_opengl3.h"
 #include "imgui/backends/imgui_impl_opengl3_loader.h"
+
+#include "UASimLib/RedCppLib/RedCppLib.hpp"
+
+using Red::_Assertion;
 
 #include "UASimLib/UASimLib.hpp"
 #include "constants.hpp"
