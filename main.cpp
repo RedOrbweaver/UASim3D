@@ -4,7 +4,8 @@
 
 // float dt = 0.00001f;
 
-
+using std::shared_ptr;
+using std::make_shared;
 
 
 int test = 0;
@@ -84,7 +85,7 @@ Cuboid_dimensions Obstacle
 
 SoundSource source;
 Microphone Mic;
-Wave current_wave;
+std::shared_ptr<Wave> current_wave;
 
 bool write_two_vectors_csv(const std::string &filepath,
                            const std::vector<float> &test_T,
@@ -146,7 +147,7 @@ bool writeMicCsv(const std::string &path = write_file)
     float t_end = Mic.gMicEvents.back().t;
     for (float t = 0; t <= t_end; t += inv_fp)
     {
-        Mic.gMicEvents.push_back({q5_inter(t), 0});
+        Mic.gMicEvents.push_back({q5_inter(current_wave->inv_fp, t), 0});
     }
 
     // posortuj po czasie
@@ -288,20 +289,20 @@ float getAtTime(double t_sec)
 
 static bool beginNextWindow()
 {
-    if (gWinIdx >= gWinPackets.size() - 1)
+    if (current_wave->gWinIdx >= current_wave->gWinPackets.size() - 1)
         return false;
     // if(gWinPackets[gWinIdx].times.size() < 2) return false;
-    gWinIdx++;
-    if (gWinPackets[gWinIdx].times.size() < 2)
+    current_wave->gWinIdx++;
+    if (current_wave->gWinPackets[current_wave->gWinIdx].times.size() < 2)
         return false;
     first = true; // nowa fala
     return true;
 }
 
-float calculateTriangleArea(Wave& wave, const std::vector<node>& nodes, int a, int b, int c)
+float calculateTriangleArea(shared_ptr<Wave> wave, const std::vector<node>& nodes, int a, int b, int c)
 {
-    glm::vec3 ab = wave.nodes[b].position - wave.nodes[a].position;
-    glm::vec3 ac = wave.nodes[c].position - wave.nodes[a].position;
+    glm::vec3 ab = wave->nodes[b].position - wave->nodes[a].position;
+    glm::vec3 ac = wave->nodes[c].position - wave->nodes[a].position;
     glm::vec3 cross = glm::cross(ab, ac);
     return 0.5f * glm::length(cross); // funkcja do obliczania pola
 }
@@ -411,10 +412,10 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 
 
 
-void StepSimulation(Wave& wave)
+void StepSimulation(shared_ptr<Wave> wave)
 {
-    wave.pruneSlowNodes(getAtTime((gWinIdx)*window_ms / 1000.0f), time_passed);
-    if (wave.nodes.empty())
+    wave->pruneSlowNodes(getAtTime((current_wave->gWinIdx)*window_ms / 1000.0f), time_passed);
+    if (wave->nodes.empty())
     {
         ktore_odbicie = 0;
         time_T2_prev.swap(time_T2);
@@ -424,7 +425,7 @@ void StepSimulation(Wave& wave)
         {
             if (!buf.empty())
             {
-                flush_echo_interpolated(Mic, buf, /*TS_native=*/inv_fp, /*quantize=*/true);
+                flush_echo_interpolated(Mic, wave, buf, /*TS_native=*/inv_fp, /*quantize=*/true);
                 buf.clear();
             }
         }
@@ -438,7 +439,7 @@ void StepSimulation(Wave& wave)
         Mic.gPrevTaken.assign(Mic.gPrevHits.size(), 0); // reset znacznik�w
 
         time_T2.clear();
-        if (!beginNextWindow() or gWinIdx == windows_number)
+        if (!beginNextWindow() or current_wave->gWinIdx == windows_number)
         {
             writeMicCsv(write_file);
             Mic.resetMicEvents();
@@ -518,7 +519,7 @@ void DrawGUI()
 
     ImGui::Text("MAX vertices/s avg: (%i): %f", VERTICES_PER_SEC_KEPT, vertices_per_sec_avg_max);
 
-    ImGui::Text("Vertices: %i", current_wave.nodes.size());
+    ImGui::Text("Vertices: %i", current_wave->nodes.size());
 
     ImGui::End();
 
@@ -580,7 +581,7 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(window, true); // setup
     ImGui_ImplOpenGL3_Init("#version 330");
 
-    //waves.push_back(Wave());
+    current_wave = make_shared<Wave>(inv_fp, dt, windows_number, gWinPackets);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -623,7 +624,7 @@ int main()
             source.velocity = source.rewind_vel;
 
             rewind_punkt = true;
-            current_wave.Begin(source, gWinPackets[gWinIdx]);
+            current_wave->Begin(source);
 
             if (serio_first)
             {
@@ -645,7 +646,7 @@ int main()
             }
 
             // buildSphereBuffers(/*dynamic=*/true);
-            buildBuffersFor(current_wave.nodes, current_wave.triangles, gWaveGL, /*dynamic=*/true);
+            buildBuffersFor(current_wave->nodes, current_wave->triangles, gWaveGL, /*dynamic=*/true);
 
             // po zbudowaniu dwudziestoscianu
             
@@ -661,7 +662,7 @@ int main()
             last_physics_time = PushTime(sim_tm, physics_times, PHYSICS_TIMES_KEPT, physics_times_index);
             total_physics_time += last_physics_time;
 
-            last_vertices_per_second = vertex_times[vertex_times_index] = (double)current_wave.nodes.size() / last_physics_time;
+            last_vertices_per_second = vertex_times[vertex_times_index] = (double)current_wave->nodes.size() / last_physics_time;
             vertex_times_index = (vertex_times_index+1) % VERTICES_PER_SEC_KEPT;
 
             time_passed += dt;

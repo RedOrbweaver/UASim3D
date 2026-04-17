@@ -1,7 +1,7 @@
 #pragma once
 #include "hmain.hpp"
 
-inline int printOversizedTriangles(Wave& wave, const Cuboid_dimensions& Cube, float maxArea)
+inline int printOversizedTriangles(shared_ptr<Wave> wave, const Cuboid_dimensions& Cube, float maxArea)
 {
     // te same sta�e co w refine
     const float cuboidHalfWidth = Cube.width * 0.5f;
@@ -13,12 +13,12 @@ inline int printOversizedTriangles(Wave& wave, const Cuboid_dimensions& Cube, fl
     const float thr2 = 4.0f * maxArea * maxArea;
 
     int count = 0;
-    for (const auto &t : wave.triangles)
+    for (const auto &t : wave->triangles)
     {
         int a = t.indices[0], b = t.indices[1], c = t.indices[2];
-        const glm::vec3 &pa = wave.nodes[a].position;
-        const glm::vec3 &pb = wave.nodes[b].position;
-        const glm::vec3 &pc = wave.nodes[c].position;
+        const glm::vec3 &pa = wave->nodes[a].position;
+        const glm::vec3 &pb = wave->nodes[b].position;
+        const glm::vec3 &pc = wave->nodes[c].position;
 
         // pomijamy tr�jk�ty blisko �ciany (jak w refine)
         const bool nearWall =
@@ -42,9 +42,9 @@ inline int printOversizedTriangles(Wave& wave, const Cuboid_dimensions& Cube, fl
         if (cr2 > thr2)
             ++count;
     }
-    float procent = (float)count / (float)wave.triangles.size() * 100.0f;
+    float procent = (float)count / (float)wave->triangles.size() * 100.0f;
     std::cout << "Oversized (splittable) triangles: "
-              << wave.triangles.size() << "\n";
+              << wave->triangles.size() << "\n";
     return count;
 }
 
@@ -250,32 +250,32 @@ inline void RenderPool(glm::vec3 cameraPos, const Cuboid_dimensions& Cube )
     drawCuboidTransparentSorted(cameraPos, Cube);
 }
 
-inline void RenderWave(Wave& wave, glm::vec3 cameraPos, 
+inline void RenderWave(shared_ptr<Wave> wave, glm::vec3 cameraPos, 
     MeshGL& gWaveGL, const Cuboid_dimensions& Cube)
 {
     static int frameCount = 0;
     if ((frameCount % 8) == 0)
     {
-        size_t budget = std::min<size_t>(4000, std::max<size_t>(1, wave.triangles.size() / 10));
-        budget = wave.triangles.size(); // TO DO: MOZNA ZMIENIC NA WIEKSZE (W SENSIE ZMIENIC np. 4 -> 2)
+        size_t budget = std::min<size_t>(4000, std::max<size_t>(1, wave->triangles.size() / 10));
+        budget = wave->triangles.size(); // TO DO: MOZNA ZMIENIC NA WIEKSZE (W SENSIE ZMIENIC np. 4 -> 2)
         int threads = std::max(1u, std::thread::hardware_concurrency());
 
-        wave.refineIcosahedron_chunked_mt(0.05f, budget, Cube, threads);
+        wave->refineIcosahedron_chunked_mt(0.05f, budget, Cube, threads);
     }
     frameCount++;
 
 
     // odbuduj bufory tylko gdy trzeba
-    if (wave.mesh_dirty)
+    if (wave->mesh_dirty)
     {
         // buildSphereBuffers(/*dynamic=*/true);
-        buildBuffersFor(wave.nodes, wave.triangles, gWaveGL, /*dynamic=*/true);
-        wave.mesh_dirty = false;
+        buildBuffersFor(wave->nodes, wave->triangles, gWaveGL, /*dynamic=*/true);
+        wave->mesh_dirty = false;
     }
     else
     {
         // To nie powinno zawsze być wzywane?
-        updatePositionsFor(wave.nodes, gWaveGL);
+        updatePositionsFor(wave->nodes, gWaveGL);
     }
 
     // kulka
