@@ -16,9 +16,9 @@ inline int printOversizedTriangles(shared_ptr<Wave> wave, const Cuboid_dimension
     for (const auto &t : wave->triangles)
     {
         int a = t.indices[0], b = t.indices[1], c = t.indices[2];
-        const glm::vec3 &pa = wave->nodes[a].position;
-        const glm::vec3 &pb = wave->nodes[b].position;
-        const glm::vec3 &pc = wave->nodes[c].position;
+        const vec3f &pa = wave->nodes[a].position;
+        const vec3f &pb = wave->nodes[b].position;
+        const vec3f &pc = wave->nodes[c].position;
 
         // pomijamy tr�jk�ty blisko �ciany (jak w refine)
         const bool nearWall =
@@ -36,8 +36,8 @@ inline int printOversizedTriangles(shared_ptr<Wave> wave, const Cuboid_dimension
             continue;
 
         // pole bez sqrt: |(pb-pa) x (pc-pa)|^2
-        const glm::vec3 cr = glm::cross(pb - pa, pc - pa);
-        const float cr2 = glm::dot(cr, cr);
+        const vec3f cr = vec3f::cross(pb - pa, pc - pa);
+        const float cr2 = vec3f::dot(cr, cr);
 
         if (cr2 > thr2)
             ++count;
@@ -48,7 +48,7 @@ inline int printOversizedTriangles(shared_ptr<Wave> wave, const Cuboid_dimension
     return count;
 }
 
-inline void buildBuffersFor(const std::vector<node> &verts,
+inline void buildBuffersFor(const std::vector<ray> &verts,
                      const std::vector<Triangle> &tris,
                      MeshGL &m,
                      bool dynamic)
@@ -60,7 +60,7 @@ inline void buildBuffersFor(const std::vector<node> &verts,
         glGenBuffers(1, &m.vbo);
     glBindBuffer(GL_ARRAY_BUFFER, m.vbo);
 
-    const GLsizeiptr vbSize = (GLsizeiptr)(verts.size() * sizeof(node));
+    const GLsizeiptr vbSize = (GLsizeiptr)(verts.size() * sizeof(ray));
     const GLenum usage = dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
     glBufferData(GL_ARRAY_BUFFER, vbSize, verts.empty() ? nullptr : (const void *)verts.data(), usage);
 
@@ -78,13 +78,13 @@ inline void buildBuffersFor(const std::vector<node> &verts,
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 } // bufory
 
-inline void updatePositionsFor(const std::vector<node> &verts, MeshGL &m)
+inline void updatePositionsFor(const std::vector<ray> &verts, MeshGL &m)
 {
     if (!m.vbo)
         return;
     glBindBuffer(GL_ARRAY_BUFFER, m.vbo);
 
-    const GLsizeiptr vbSize = (GLsizeiptr)(verts.size() * sizeof(node));
+    const GLsizeiptr vbSize = (GLsizeiptr)(verts.size() * sizeof(ray));
     glBufferData(GL_ARRAY_BUFFER, vbSize, nullptr, GL_DYNAMIC_DRAW);
     if (!verts.empty())
         glBufferSubData(GL_ARRAY_BUFFER, 0, vbSize, (const void *)verts.data());
@@ -201,7 +201,7 @@ inline void drawMesh(const MeshGL &m, const glm::vec3 &offset = glm::vec3(0),
 
     glBindBuffer(GL_ARRAY_BUFFER, m.vbo);
     glEnableClientState(GL_VERTEX_ARRAY); // compat profile
-    glVertexPointer(3, GL_FLOAT, (GLsizei)sizeof(node), (const void *)offsetof(node, position));
+    glVertexPointer(3, GL_FLOAT, (GLsizei)sizeof(ray), (const void *)offsetof(ray, position));
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.ibo);
 

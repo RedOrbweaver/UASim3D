@@ -306,12 +306,12 @@ static bool beginNextWindow()
     return true;
 }
 
-float calculateTriangleArea(shared_ptr<Wave> wave, const std::vector<node>& nodes, int a, int b, int c)
+float calculateTriangleArea(shared_ptr<Wave> wave, const std::vector<ray>& nodes, int a, int b, int c)
 {
-    glm::vec3 ab = wave->nodes[b].position - wave->nodes[a].position;
-    glm::vec3 ac = wave->nodes[c].position - wave->nodes[a].position;
-    glm::vec3 cross = glm::cross(ab, ac);
-    return 0.5f * glm::length(cross); // funkcja do obliczania pola
+    vec3f ab = wave->nodes[b].position - wave->nodes[a].position;
+    vec3f ac = wave->nodes[c].position - wave->nodes[a].position;
+    vec3f cross = vec3f::cross(ab, ac);
+    return 0.5f * cross.length(); // funkcja do obliczania pola
 }
 
 void calculateFPS()
@@ -681,9 +681,9 @@ int main()
 
                 if (time_passed / dt >= (window_ms / 1000.0f) / dt && rewind_punkt)
                 {
-                    Mic.rewind_point = glm::vec3(Mic.mic_x, Mic.mic_y, Mic.mic_z);
+                    Mic.rewind_point = vec3f{Mic.mic_x, Mic.mic_y, Mic.mic_z};
                     Mic.rewind_vel = Mic.mic_velocity;
-                    source.rewind_point = glm::vec3(source.src_x, source.src_y, source.src_z);
+                    source.rewind_point = vec3f{source.src_x, source.src_y, source.src_z};
                     source.rewind_vel = source.velocity;
                     rewind_punkt = false;
                 }
