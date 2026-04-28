@@ -595,6 +595,9 @@ int main()
 
     current_wave = make_shared<Wave>(inv_fp, dt, windows_number, gWinPackets);
 
+    auto cb = make_shared<CollisionBox>(vec3f{-1, 0, 0}, vec3f{1, 1, 1}, vec3f{2.5, 1, 1});
+    //current_wave->AddCollisionObject(cb);
+
     while (!glfwWindowShouldClose(window))
     {
         clock_t frame_start = clock();
@@ -700,6 +703,11 @@ int main()
             RenderWave(current_wave, cameraPos, gWaveGL, Cube);
 
         RenderPool(cameraPos, Cube);
+
+        for(auto o : current_wave->objects)
+        {
+            RenderCollisionObject(current_wave, o);
+        }
 
         updatePositionsFor(Mic.verts, gMicGL);
         RenderMicrophone(Mic, gMicGL);

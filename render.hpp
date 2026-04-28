@@ -250,6 +250,97 @@ inline void RenderPool(glm::vec3 cameraPos, const Cuboid_dimensions& Cube )
     drawCuboidTransparentSorted(cameraPos, Cube);
 }
 
+void RenderCollisionObject(shared_ptr<Wave> wave, shared_ptr<CollisionObject> osptr)
+{
+    if(auto cb = dynamic_cast<CollisionBox*>(osptr.get()))
+    {
+        // Save matrix
+        glPushMatrix();
+
+        // Translate to position
+        glTranslatef(cb->position.x, cb->position.y, cb->position.z);
+
+        // Rotate: stored as radians (X = pitch, Y = yaw, Z = roll).
+        const float RAD_TO_DEG = 180.0f / 3.14159265358979323846f;
+        glRotatef(cb->rotation.z * RAD_TO_DEG, 0.0f, 0.0f, 1.0f); // roll (Z)
+        glRotatef(cb->rotation.y * RAD_TO_DEG, 0.0f, 1.0f, 0.0f); // yaw  (Y)
+        glRotatef(cb->rotation.x * RAD_TO_DEG, 1.0f, 0.0f, 0.0f); // pitch(X)
+
+        // Local corners
+        vec3f bmin = cb->bmin_local;
+        vec3f bmax = cb->bmax_local;
+
+        vec3f v[8] = {
+            {bmin.x, bmin.y, bmin.z}, // 0
+            {bmax.x, bmin.y, bmin.z}, // 1
+            {bmax.x, bmax.y, bmin.z}, // 2
+            {bmin.x, bmax.y, bmin.z}, // 3
+            {bmin.x, bmin.y, bmax.z}, // 4
+            {bmax.x, bmin.y, bmax.z}, // 5
+            {bmax.x, bmax.y, bmax.z}, // 6
+            {bmin.x, bmax.y, bmax.z}  // 7
+        };
+
+        // Draw wireframe edges
+        glColor3f(1.0f, 0.0f, 0.0f); // red for example
+        glBegin(GL_LINES);
+        // bottom rectangle (0-1-2-3)
+        glVertex3f(v[0].x, v[0].y, v[0].z); glVertex3f(v[1].x, v[1].y, v[1].z);
+        glVertex3f(v[1].x, v[1].y, v[1].z); glVertex3f(v[2].x, v[2].y, v[2].z);
+        glVertex3f(v[2].x, v[2].y, v[2].z); glVertex3f(v[3].x, v[3].y, v[3].z);
+        glVertex3f(v[3].x, v[3].y, v[3].z); glVertex3f(v[0].x, v[0].y, v[0].z);
+
+        // top rectangle (4-5-6-7)
+        glVertex3f(v[4].x, v[4].y, v[4].z); glVertex3f(v[5].x, v[5].y, v[5].z);
+        glVertex3f(v[5].x, v[5].y, v[5].z); glVertex3f(v[6].x, v[6].y, v[6].z);
+        glVertex3f(v[6].x, v[6].y, v[6].z); glVertex3f(v[7].x, v[7].y, v[7].z);
+        glVertex3f(v[7].x, v[7].y, v[7].z); glVertex3f(v[4].x, v[4].y, v[4].z);
+
+        // vertical edges
+        for(int i = 0; i < 4; ++i)
+        {
+            glVertex3f(v[i].x, v[i].y, v[i].z);
+            glVertex3f(v[i+4].x, v[i+4].y, v[i+4].z);
+        }
+        glEnd();
+
+        // Optionally draw filled faces (semi-transparent)
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glColor4f(0.0f, 0.7f, 0.7f, 0.2f);
+
+        glBegin(GL_QUADS);
+        // +Z top (4,5,6,7)
+        glVertex3f(v[4].x, v[4].y, v[4].z); glVertex3f(v[5].x, v[5].y, v[5].z);
+        glVertex3f(v[6].x, v[6].y, v[6].z); glVertex3f(v[7].x, v[7].y, v[7].z);
+        // -Z bottom (0,1,2,3)
+        glVertex3f(v[0].x, v[0].y, v[0].z); glVertex3f(v[1].x, v[1].y, v[1].z);
+        glVertex3f(v[2].x, v[2].y, v[2].z); glVertex3f(v[3].x, v[3].y, v[3].z);
+        // +Y (3,2,6,7)
+        glVertex3f(v[3].x, v[3].y, v[3].z); glVertex3f(v[2].x, v[2].y, v[2].z);
+        glVertex3f(v[6].x, v[6].y, v[6].z); glVertex3f(v[7].x, v[7].y, v[7].z);
+        // -Y (0,1,5,4)
+        glVertex3f(v[0].x, v[0].y, v[0].z); glVertex3f(v[1].x, v[1].y, v[1].z);
+        glVertex3f(v[5].x, v[5].y, v[5].z); glVertex3f(v[4].x, v[4].y, v[4].z);
+        // +X (1,2,6,5)
+        glVertex3f(v[1].x, v[1].y, v[1].z); glVertex3f(v[2].x, v[2].y, v[2].z);
+        glVertex3f(v[6].x, v[6].y, v[6].z); glVertex3f(v[5].x, v[5].y, v[5].z);
+        // -X (0,3,7,4)
+        glVertex3f(v[0].x, v[0].y, v[0].z); glVertex3f(v[3].x, v[3].y, v[3].z);
+        glVertex3f(v[7].x, v[7].y, v[7].z); glVertex3f(v[4].x, v[4].y, v[4].z);
+        glEnd();
+
+        glDisable(GL_BLEND);
+
+        glPopMatrix();
+    }
+    else
+    {
+        Red::Failure("Unknown collision object type");
+    }
+}
+
+
 inline void RenderWave(shared_ptr<Wave> wave, glm::vec3 cameraPos, 
     MeshGL& gWaveGL, const Cuboid_dimensions& Cube)
 {
